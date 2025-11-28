@@ -66,6 +66,12 @@ QWidget {
     border: 3px solid #30323a;
 }
 
+#spin_btn:disabled {
+    background-color: #1f1f23;
+    border: 3px solid #2f2f35;
+    color: #666;
+}
+
 
 /* ===== Reels ===== */
 #reel {

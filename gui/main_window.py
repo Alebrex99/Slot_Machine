@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtMultimedia import QSound
+import random
 
 from core.slot_logic import spin_reels, calculate_reward
-
+from core.sound_manager import play_sfx, play_bgm  
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -21,15 +21,20 @@ class MainWindow(QWidget):
         self.symbol_size = 130
         self.spin_timer = QTimer()
         self.spin_speed = 80  # ms per frame roll
-        self.roll_frames = 15
+        self.roll_frames = 50
         self.current_frame = 0
 
         # Load assets
         self.symbols = {
             "banana": QPixmap("gui/assets/icons/banana.png").scaled(self.symbol_size, self.symbol_size),
-            "apple": QPixmap("gui/assets/icons/apple.png").scaled(self.symbol_size, self.symbol_size),
+            "bar": QPixmap("gui/assets/icons/bar.png").scaled(self.symbol_size, self.symbol_size),
+            "bell": QPixmap("gui/assets/icons/bell.png").scaled(self.symbol_size, self.symbol_size),
+            "cherry": QPixmap("gui/assets/icons/cherry.png").scaled(self.symbol_size, self.symbol_size),
+            "diamond": QPixmap("gui/assets/icons/diamond.png").scaled(self.symbol_size, self.symbol_size),
             "grape": QPixmap("gui/assets/icons/grape.png").scaled(self.symbol_size, self.symbol_size),
-            "cherry": QPixmap("gui/assets/icons/cherry.png").scaled(self.symbol_size, self.symbol_size)
+            "lemon": QPixmap("gui/assets/icons/lemon.png").scaled(self.symbol_size, self.symbol_size),
+            "seven": QPixmap("gui/assets/icons/seven.png").scaled(self.symbol_size, self.symbol_size),
+            "star": QPixmap("gui/assets/icons/star.png").scaled(self.symbol_size, self.symbol_size),
         }
 
         # ===============================
@@ -54,7 +59,7 @@ class MainWindow(QWidget):
 
         for reel in (self.reel1, self.reel2, self.reel3):
             reel.setObjectName("reel")
-            reel.setPixmap(self.symbols["banana"])
+            reel.setPixmap(self.symbols["seven"])
 
         # Spin Button
         self.spin_btn = QPushButton("SPIN")
@@ -86,6 +91,11 @@ class MainWindow(QWidget):
         # ===============================
         self.spin_timer.timeout.connect(self.animate_spin)
 
+        # ===============================
+        #         START BGM
+        # ===============================
+        play_bgm("bgm.mp3")  # <-- start background music
+
     # --------------------------------------------------------
     #                     COIN SYSTEM
     # --------------------------------------------------------
@@ -93,20 +103,29 @@ class MainWindow(QWidget):
         self.coin_label.setText(f"🪙 {self.coins}")
 
     def on_redeem(self):
+        # play click sound
+        play_sfx("click.wav")
+        
         self.coins += 20
-        QSound.play("gui/assets/sounds/redeem.wav")
         self.update_coin_label()
 
     # --------------------------------------------------------
     #                     SPIN LOGIC
     # --------------------------------------------------------
     def on_spin(self):
+        # play click sound
+        play_sfx("click.wav")
+
+        self.watermark.setText("© Fadil Nurmaulid")
+        self.spin_btn.setDisabled(True)
+
         if self.coins < self.spin_cost:
             self.watermark.setText("Not enough coins!")
+            self.spin_btn.setDisabled(False)
             return
 
         # play spin sound
-        QSound.play("gui/assets/sounds/spin.wav")
+        play_sfx("spin.wav")
 
         self.coins -= self.spin_cost
         self.update_coin_label()
@@ -122,7 +141,6 @@ class MainWindow(QWidget):
         self.current_frame += 1
 
         # Rolling effect – pick random symbols while spinning
-        import random
         random_symbols = list(self.symbols.values())
 
         self.reel1.setPixmap(random.choice(random_symbols))
@@ -133,6 +151,7 @@ class MainWindow(QWidget):
         if self.current_frame >= self.roll_frames:
             self.spin_timer.stop()
             self.show_final_result()
+            self.spin_btn.setDisabled(False)
 
     def show_final_result(self):
         # Set the final images
@@ -149,9 +168,7 @@ class MainWindow(QWidget):
 
         # play sound if win
         if reward > 0:
-            QSound.play("gui/assets/sounds/win.wav")
+            play_sfx("win.wav")
             self.watermark.setText(f"WIN +{reward} 🪙")
         else:
             self.watermark.setText("Try again!")
-
-
