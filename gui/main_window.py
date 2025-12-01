@@ -5,6 +5,8 @@ import random
 
 from core.slot_logic import spin_reels, calculate_reward
 from core.sound_manager import play_sfx, play_bgm  
+from core.redeem_logic import validate_redeem_code
+from gui.redeem_dialog import RedeemDialog
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -105,9 +107,9 @@ class MainWindow(QWidget):
     def on_redeem(self):
         # play click sound
         play_sfx("click.wav")
-        
-        self.coins += 20
-        self.update_coin_label()
+
+        dialog = RedeemDialog(redeem_callback=self.redeem_code_callback, parent=self)
+        dialog.exec_()
 
     # --------------------------------------------------------
     #                     SPIN LOGIC
@@ -172,3 +174,13 @@ class MainWindow(QWidget):
             self.watermark.setText(f"WIN +{reward} 🪙")
         else:
             self.watermark.setText("Try again!")
+
+    def redeem_code_callback(self, code: str) -> int:
+        coins_to_add = validate_redeem_code(code)
+        if coins_to_add:
+            self.coins += coins_to_add
+            self.update_coin_label()
+            # use click.wav for redeem
+            play_sfx("click.wav")
+            return coins_to_add
+        return 0
