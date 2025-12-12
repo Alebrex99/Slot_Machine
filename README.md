@@ -91,7 +91,10 @@ project/
 
 ## 🖥 Preview
 
-![wait]
+![Screenshot1](screenshots/Screenshot1.png)
+![Screenshot2](screenshots/Screenshot2.png)
+![Screenshot3](screenshots/Screenshot3.png)
+![Screenshot4](screenshots/Screenshot4.png)
 
 ```
 🎞 Animated reels
@@ -106,8 +109,8 @@ project/
 ### **1. Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/slot-machine.git
-cd slot-machine
+git clone https://github.com/fadil-nurmaulid/Slot_Machine.git
+cd Slot_Machine
 ```
 
 ### **2. Create a virtual environment (recommended)**
@@ -181,6 +184,8 @@ This project is licensed under the **MIT License** — freely usable and modifia
 ## 👤 Author
 
 **Fadil Nurmaulid**
-Developer • Aspiring AI Engineer • Python Enthusiast 
+
+Physics Student • Average Human • Aspiring AI Engineer 
 
 > *Built with modularity, clarity, and expandability in mind.*
+
