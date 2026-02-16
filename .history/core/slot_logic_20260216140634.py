@@ -26,11 +26,10 @@ def spin_reels():
     Probability of matching symbols is controlled by WIN_PERCENTAGE.
     """
     #se si tratta di un caso che voglio far vincere: Distr uniforme: P(X<a) = a, quindi se voglio che il 20% dei casi sia vincente, allora a=0.2
-    # es. 20%: il gioco fa uscire 3 valori uguali il 20% delle volte
     if random.random() < (WIN_PERCENTAGE / 100):
         # WIN_PERCENTAGE chance: all 3 symbols are the same
         symbol = random.choice(SYMBOLS)
-        return (symbol, symbol, symbol) 
+        return (symbol, symbol, symbol)
     else:
         # Remaining chance: random symbols
         return tuple(random.choices(SYMBOLS, k=3))

@@ -16,21 +16,6 @@ INITIAL_COINS = 10
 
 class MainWindow(QWidget):
     def __init__(self):
-        """
-        Initialize the Slot Machine main window.
-        Sets up the GUI components including:
-        - Window properties (title, icon, minimum size)
-        - Game variables (coins, bet, spin mechanics)
-        - Asset loading (symbol pixmaps)
-        - UI elements (bet controls, coin display, reels, spin button)
-        - Layout configuration with proper spacing
-        - Timer for spin animation
-        - Background music playback
-        The window uses a vertical layout with:
-        - Top section: bet controls (left), watermark (center), redeem button and coin label (right)
-        - Middle section: three reels (centered)
-        - Bottom section: spin button (centered)
-        """
         super().__init__()
 
         self.setWindowTitle("Slot Machine")
@@ -77,19 +62,17 @@ class MainWindow(QWidget):
         
         self.bet_up_btn = QPushButton("▲")
         self.bet_up_btn.setObjectName("bet_up_btn")
-        self.bet_up_btn.setStyleSheet("font-size: 50px;")
         self.bet_up_btn.clicked.connect(self.increase_bet)
         
         self.bet_down_btn = QPushButton("▼")
         self.bet_down_btn.setObjectName("bet_down_btn")
-        self.bet_down_btn.setStyleSheet("font-size: 50px;")
         self.bet_down_btn.clicked.connect(self.decrease_bet)
         
         # Coins display (right side)
         self.coin_label = QLabel("")
         self.coin_label.setObjectName("coin_label")
         self.coin_label.setMinimumWidth(200)
-        #self.coin_label.setStyleSheet("font-size: 50px; font-weight: 700;") #nel CSS
+        self.coin_label.setStyleSheet("font-size: 30px; font-weight: 700;")
         self.update_coin_label()
 
         self.redeem_btn = QPushButton("Redeem Coin")
@@ -100,7 +83,7 @@ class MainWindow(QWidget):
         # i need to make the Lable larger to fit the text, otherwise it will be cut off
         self.watermark.setAlignment(Qt.AlignCenter)
         self.watermark.setObjectName("watermark")
-        #self.watermark.setStyleSheet("font-size: 50px; font-weight: 600;") #sostituisce il style del watermark, che prima era definito nel file css, ma ora è definito direttamente qui per evitare problemi di dimensioni del testo che veniva tagliato
+        self.watermark.setStyleSheet("font-size: 50px; font-weight: 600;") #sostituisce il style del watermark, che prima era definito nel file css, ma ora è definito direttamente qui per evitare problemi di dimensioni del testo che veniva tagliato
 
         # Reels
         self.reel1 = QLabel()
@@ -126,26 +109,15 @@ class MainWindow(QWidget):
         bet_controls.addWidget(self.bet_up_btn)
         bet_controls.addWidget(self.bet_display)
         bet_controls.addWidget(self.bet_down_btn)
-        bet_controls.addStretch()
-        bet_controls.setAlignment(Qt.AlignLeft)
         
-        # redeem + coins layout (right side)
-        redeem_layout = QVBoxLayout()
-        redeem_layout.addWidget(self.coin_label)
-        redeem_layout.addWidget(self.redeem_btn)
-        redeem_layout.addStretch()
-        redeem_layout.setAlignment(Qt.AlignRight)
-        
-        # Top layout complete: bet (left), watermark (center), redeem + coins (right)
+        # Top layout: bet (left), watermark (center), redeem + coins (right)
         top = QHBoxLayout()
         top.addLayout(bet_controls)
-        top.addStretch()
+        #top.addStretch()
         top.addWidget(self.watermark)
         top.addStretch()
-        top.addLayout(redeem_layout)
-        top.setAlignment(Qt.AlignTop)
-        #top.addWidget(self.redeem_btn)
-        #top.addWidget(self.coin_label)
+        top.addWidget(self.redeem_btn)
+        top.addWidget(self.coin_label)
 
         reels = QHBoxLayout()
         reels.addStretch()
@@ -220,7 +192,7 @@ class MainWindow(QWidget):
         #self.coins -= self.spin_cost
         self.coins -= self.current_bet
         self.update_coin_label()
-        #spin_reels() -> ad esempio ("cherry", "cherry", "lemon")
+
         self.final_result = spin_reels() #restituisce una tupla di 3 simboli, ad esempio ("cherry", "cherry", "lemon")
 
         self.current_frame = 0
@@ -241,14 +213,12 @@ class MainWindow(QWidget):
             self.spin_btn.setDisabled(False)
 
     def show_final_result(self):
-        r1, r2, r3 = self.final_result #estraggo i simboli del risultato finale
+        r1, r2, r3 = self.final_result
 
         self.reel1.setPixmap(self.symbols[r1].scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
         self.reel2.setPixmap(self.symbols[r2].scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
         self.reel3.setPixmap(self.symbols[r3].scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
         # reward = calculate_reward([r1, r2, r3])
-        # Calcolo ricompensa con moltiplicatore pari al valore della puntata 
-        # Es. SEVEN (3: 100 ; 2: 10):se punto 0.20 e ottengo 3 SEVEN (premio 100) allora ottengo 20
         reward = calculate_reward([r1, r2, r3], self.current_bet)
         self.coins += reward
         self.update_coin_label()

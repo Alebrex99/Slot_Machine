@@ -143,7 +143,6 @@ class MainWindow(QWidget):
         top.addWidget(self.watermark)
         top.addStretch()
         top.addLayout(redeem_layout)
-        top.setAlignment(Qt.AlignTop)
         #top.addWidget(self.redeem_btn)
         #top.addWidget(self.coin_label)
 

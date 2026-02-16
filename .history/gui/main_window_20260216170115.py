@@ -134,7 +134,6 @@ class MainWindow(QWidget):
         redeem_layout.addWidget(self.coin_label)
         redeem_layout.addWidget(self.redeem_btn)
         redeem_layout.addStretch()
-        redeem_layout.setAlignment(Qt.AlignRight)
         
         # Top layout complete: bet (left), watermark (center), redeem + coins (right)
         top = QHBoxLayout()
@@ -143,7 +142,6 @@ class MainWindow(QWidget):
         top.addWidget(self.watermark)
         top.addStretch()
         top.addLayout(redeem_layout)
-        top.setAlignment(Qt.AlignTop)
         #top.addWidget(self.redeem_btn)
         #top.addWidget(self.coin_label)
 

@@ -100,7 +100,7 @@ class MainWindow(QWidget):
         # i need to make the Lable larger to fit the text, otherwise it will be cut off
         self.watermark.setAlignment(Qt.AlignCenter)
         self.watermark.setObjectName("watermark")
-        #self.watermark.setStyleSheet("font-size: 50px; font-weight: 600;") #sostituisce il style del watermark, che prima era definito nel file css, ma ora è definito direttamente qui per evitare problemi di dimensioni del testo che veniva tagliato
+        self.watermark.setStyleSheet("font-size: 50px; font-weight: 600;") #sostituisce il style del watermark, che prima era definito nel file css, ma ora è definito direttamente qui per evitare problemi di dimensioni del testo che veniva tagliato
 
         # Reels
         self.reel1 = QLabel()
@@ -127,25 +127,15 @@ class MainWindow(QWidget):
         bet_controls.addWidget(self.bet_display)
         bet_controls.addWidget(self.bet_down_btn)
         bet_controls.addStretch()
-        bet_controls.setAlignment(Qt.AlignLeft)
         
-        # redeem + coins layout (right side)
-        redeem_layout = QVBoxLayout()
-        redeem_layout.addWidget(self.coin_label)
-        redeem_layout.addWidget(self.redeem_btn)
-        redeem_layout.addStretch()
-        redeem_layout.setAlignment(Qt.AlignRight)
-        
-        # Top layout complete: bet (left), watermark (center), redeem + coins (right)
+        # Top layout: bet (left), watermark (center), redeem + coins (right)
         top = QHBoxLayout()
         top.addLayout(bet_controls)
         top.addStretch()
         top.addWidget(self.watermark)
         top.addStretch()
-        top.addLayout(redeem_layout)
-        top.setAlignment(Qt.AlignTop)
-        #top.addWidget(self.redeem_btn)
-        #top.addWidget(self.coin_label)
+        top.addWidget(self.redeem_btn)
+        top.addWidget(self.coin_label)
 
         reels = QHBoxLayout()
         reels.addStretch()

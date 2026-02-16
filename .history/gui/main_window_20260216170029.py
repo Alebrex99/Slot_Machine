@@ -70,7 +70,7 @@ class MainWindow(QWidget):
         # Bet selection widget (left side)
         self.bet_display = QLabel("0.00")
         self.bet_display.setObjectName("bet_display")
-        self.bet_display.setAlignment(Qt.AlignCenter)
+      
         self.bet_display.setMinimumWidth(300)
         self.bet_display.setMinimumHeight(100)
         self.bet_display.setStyleSheet("font-size: 40px; font-weight: 700; border: 2px solid #333; padding: 10px;")
@@ -127,14 +127,12 @@ class MainWindow(QWidget):
         bet_controls.addWidget(self.bet_display)
         bet_controls.addWidget(self.bet_down_btn)
         bet_controls.addStretch()
-        bet_controls.setAlignment(Qt.AlignLeft)
         
         # redeem + coins layout (right side)
         redeem_layout = QVBoxLayout()
         redeem_layout.addWidget(self.coin_label)
         redeem_layout.addWidget(self.redeem_btn)
         redeem_layout.addStretch()
-        redeem_layout.setAlignment(Qt.AlignRight)
         
         # Top layout complete: bet (left), watermark (center), redeem + coins (right)
         top = QHBoxLayout()
@@ -143,7 +141,6 @@ class MainWindow(QWidget):
         top.addWidget(self.watermark)
         top.addStretch()
         top.addLayout(redeem_layout)
-        top.setAlignment(Qt.AlignTop)
         #top.addWidget(self.redeem_btn)
         #top.addWidget(self.coin_label)
 

@@ -153,6 +153,7 @@ class MainWindow(QWidget):
         reels.addWidget(self.reel2)
         reels.addWidget(self.reel3)
         reels.addStretch()
+        reels.setAlignment(Qt.AlignCenter)
 
         root = QVBoxLayout()
         root.addLayout(top)

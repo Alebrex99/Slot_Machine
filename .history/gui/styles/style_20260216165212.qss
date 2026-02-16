@@ -31,7 +31,7 @@ QWidget {
     background-color: #2d2f3a;
     padding: 8px 15px;
     border-radius: 10px;
-    font-size: 30px;
+    font-size: 20px;
     font-weight: bold;
     border: 2px solid #44444a;
 }
@@ -51,9 +51,9 @@ QWidget {
     background-color: #272932;
     padding: 15px;
     border-radius: 15px;
-    font-size: 40px;
+    font-size: 24px;
     font-weight: bold;
-    border: 4px solid #383a42;
+    border: 3px solid #383a42;
     letter-spacing: 2px;
 }
 
