@@ -19,7 +19,6 @@ REWARD_TABLE = {
     "lemon": {"3": 10, "2": 1},
 }
 
-# FORZAMENTO PROBABILITA' DI VITTORIA PRE DEFINITA: WIN_PERCENTAGE = 20% -> 20% di vittoria (3 o 2 simboli uguali), 80% di perdita (3 simboli diversi)
 def spin_reels():
     '''Simulates a slot machine spin and returns three symbols as a tuple.
 
@@ -55,40 +54,34 @@ def spin_reels():
     Spins the slot machine and returns 3 symbols (tuple).
     WIN_PERCENTAGE controls overall win probability (3 or 2 matching symbols).
     """
-    # genero un numero casuale (distr. uniforme) tra 0 e 1. Quindi la variabile X<a% è vera con probabilità a%
     if random.random() < (WIN_PERCENTAGE / 100):
-        # WIN = Probabilità di vittoria con 3 simboli uguali o 2 simboli uguali
-        # P (3-of-a-kind) = 30% delle vittorie, P (2-of-a-kind) = 70% delle vittorie
-        # P (3-of-a-kind) = 0.3 * WIN_PERCENTAGE = 0.3*0.2 = 6%, P (2-of-a-kind) = 0.7 * WIN_PERCENTAGE = 0.7*0.2 = 14% -> totale 20% di vittoria
+        # WIN_PERCENTAGE chance: winning spin (3 or 2 matching symbols)
         if random.random() < 0.3:  # 30% of wins are 3-of-a-kind
             symbol = random.choice(SYMBOLS)
             return (symbol, symbol, symbol)
         else:  # 70% of wins are 2-of-a-kind
-            symbol = random.choice(SYMBOLS) # Simbolo che si ripete 2 volte
-            positions = random.sample([0, 1, 2], 2)  # prendi 2 valori casuali dalla lista, saranno le posizioni (indici)
+            symbol = random.choice(SYMBOLS)
+            positions = random.sample([0, 1, 2], 2)  # Pick 2 positions to match
             result = [None, None, None]
-            # Metti i simboli uguali nelle posizioni scelte
+            # metti i simboli uguali nelle posizioni scelte
             result[positions[0]] = symbol
             result[positions[1]] = symbol
-            # Calcolo la posizione del simbolo diverso, che è l'indice che non è in positions
-            # Other_pos -> positions sarebbe [0, 1] o [0, 2] o [1, 2], quindi prendo l'indice che non è in positions
+            # Third position gets a different symbol
+            # positions sarebbe [0, 1] o [0, 2] o [1, 2], quindi prendo l'indice che non è in positions
             # es. se positions è [0, 1], allora other_pos sarà 2; se positions è [0, 2], allora other_pos sarà 1; se positions è [1, 2], allora other_pos sarà 0
             other_pos = [i for i in [0, 1, 2] if i not in positions][0] #crea una lista e prendi il primo valore
-            # available è la lista dei simboli disponibili per il terzo simbolo, che deve essere diverso da quello scelto per i due simboli uguali
             available = [s for s in SYMBOLS if s != symbol]
             result[other_pos] = random.choice(available)
             return tuple(result)
     else:
-        # LOSS = (100 - WIN_PERCENTAGE)% chance: all symbols different
-        symbols = random.sample(SYMBOLS, 3) # prendo 3 simboli diversi dalla lista SYMBOLS
-        return tuple(symbols)
-        #result = []
-        #available = SYMBOLS.copy()
-        #for _ in range(3):
-        #    symbol = random.choice(available)
-        #    result.append(symbol)
-        #    available.remove(symbol)
-        #return tuple(result)
+        # (100 - WIN_PERCENTAGE)% chance: all symbols different (loss)
+        result = []
+        available = SYMBOLS.copy()
+        for _ in range(3):
+            symbol = random.choice(available)
+            result.append(symbol)
+            available.remove(symbol)
+        return tuple(result)
 
 
 def calculate_reward(result, bet_multiplier=1.0):

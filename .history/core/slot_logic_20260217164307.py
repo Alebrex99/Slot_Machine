@@ -115,3 +115,6 @@ def calculate_reward(result, bet_multiplier=1.0):
 
     # No match
     return 0
+
+
+# REEL STREEP: PROVA PER EFFETTIVA SLOT MACHINE

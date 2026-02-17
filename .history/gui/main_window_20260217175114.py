@@ -82,13 +82,14 @@ class MainWindow(QWidget):
         self.bet_display.setMinimumWidth(300)
         self.bet_display.setMinimumHeight(100)
         self.bet_display.setStyleSheet("font-size: 40px; font-weight: 700; border: 2px solid #333; padding: 10px;")
-        # Validator: solo numeri con max 2 decimali
-        validator = QDoubleValidator(0.00, 999999.99, 2)
-        validator.setNotation(QDoubleValidator.StandardNotation)
-        self.bet_display.setValidator(validator)
-        # Connect editing finished to validation
-        self.bet_display.editingFinished.connect(self.on_bet_manual_input)
-
+        # validator: massimo 2 decimali
++       validator = QDoubleValidator(0.00, 999999.99, 2, self)
++       validator.setNotation(QDoubleValidator.StandardNotation)
++       self.bet_display.setValidator(validator)
++       # quando l'utente termina l'editing, sincronizzo il valore e valido la puntata
++       self.bet_display.editingFinished.connect(self.on_bet_edited)
+        
+        
         self.bet_up_btn = QPushButton("▲")
         # voglio poter tener pressato il pulsante per aumentare la puntata, quindi uso setAutoRepeat(True) e setAutoRepeatInterval(100) per farlo ripetere ogni 100ms
         self.bet_up_btn.setAutoRepeat(True)
@@ -191,32 +192,8 @@ class MainWindow(QWidget):
         self.coin_label.setText(f"🪙 {self.coins:.2f}")
     
     def update_bet_display(self):
-        """Updates bet display and validates without triggering editingFinished"""
-        self.bet_display.blockSignals(True)  # Prevent recursive calls
         self.bet_display.setText(f"{self.current_bet:.2f}")
-        self.bet_display.blockSignals(False)
         self.validate_bet()
-    
-    def on_bet_manual_input(self):
-        """Handles manual bet input from keyboard, rounds to nearest 0.10"""
-        play_sfx("click.wav")
-        
-        # Get text and convert to float
-        text = self.bet_display.text().replace(",", ".")  # Handle comma as decimal
-        
-        try:
-            value = float(text)
-        except ValueError:
-            value = 0.00
-        
-        # Round to nearest 0.10
-        self.current_bet = round(value / 0.10) * 0.10
-        
-        # Clamp to valid range
-        self.current_bet = max(0.00, min(self.current_bet, self.coins))
-        
-        # Update display
-        self.update_bet_display()
     
     def increase_bet(self):
         play_sfx("click.wav")

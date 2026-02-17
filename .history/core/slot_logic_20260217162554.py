@@ -19,7 +19,6 @@ REWARD_TABLE = {
     "lemon": {"3": 10, "2": 1},
 }
 
-# FORZAMENTO PROBABILITA' DI VITTORIA PRE DEFINITA: WIN_PERCENTAGE = 20% -> 20% di vittoria (3 o 2 simboli uguali), 80% di perdita (3 simboli diversi)
 def spin_reels():
     '''Simulates a slot machine spin and returns three symbols as a tuple.
 

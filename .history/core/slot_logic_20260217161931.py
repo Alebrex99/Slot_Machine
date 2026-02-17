@@ -19,7 +19,6 @@ REWARD_TABLE = {
     "lemon": {"3": 10, "2": 1},
 }
 
-# FORZAMENTO PROBABILITA' DI VITTORIA PRE DEFINITA: WIN_PERCENTAGE = 20% -> 20% di vittoria (3 o 2 simboli uguali), 80% di perdita (3 simboli diversi)
 def spin_reels():
     '''Simulates a slot machine spin and returns three symbols as a tuple.
 
@@ -80,15 +79,13 @@ def spin_reels():
             return tuple(result)
     else:
         # LOSS = (100 - WIN_PERCENTAGE)% chance: all symbols different
-        symbols = random.sample(SYMBOLS, 3) # prendo 3 simboli diversi dalla lista SYMBOLS
-        return tuple(symbols)
-        #result = []
-        #available = SYMBOLS.copy()
-        #for _ in range(3):
-        #    symbol = random.choice(available)
-        #    result.append(symbol)
-        #    available.remove(symbol)
-        #return tuple(result)
+        result = []
+        available = SYMBOLS.copy()
+        for _ in range(3):
+            symbol = random.choice(available)
+            result.append(symbol)
+            available.remove(symbol)
+        return tuple(result)
 
 
 def calculate_reward(result, bet_multiplier=1.0):
