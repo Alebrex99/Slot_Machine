@@ -19,7 +19,6 @@ def write_to_csv(data):
     # Scrive i dati in un file CSV
     #columns: TIMESTAMP | EVENT_TYPE | BET | EXPECTED_VALUE | RESULT | COIN | MESSAGE
     '''TIMESTAMP | EVENT_TYPE | BET | EXPECTED_VALUE | RESULT | COIN | MESSAGE'''
-
     with open('metrics.csv', 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(data)

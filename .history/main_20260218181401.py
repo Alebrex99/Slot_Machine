@@ -11,9 +11,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     load_stylesheet(app)
 
-    metrics_logger = MetricsLogger()  # Initialize metrics logger (creates file if needed)
-    metrics_logger.enable_metrics(expected_value=0.33)  # Enable logging with desired expected value
-    window = MainWindow(metrics_logger=metrics_logger)
+    window = MainWindow()
     window.show()
 
     sys.exit(app.exec_())

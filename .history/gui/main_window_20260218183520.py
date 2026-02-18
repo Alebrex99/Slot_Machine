@@ -318,7 +318,7 @@ class MainWindow(QWidget):
         # LOG RESULT after coins are updated
         self._metrics.log_result(result_tuple=(r1,r2,r3), 
                                  reward=reward,
-                                 coin_after=self.coins) #coins updated sopra
+                                 coin_after=self.coins)
 
         if reward > 0:
             play_sfx("win.wav")

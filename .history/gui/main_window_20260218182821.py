@@ -276,7 +276,7 @@ class MainWindow(QWidget):
         play_sfx("spin.wav")
         
         # LOG BET before deducting coins
-        self._metrics.log_bet(self.current_bet, coin_before=self.coins)
+        
         
         #self.coins -= self.spin_cost # <- OLD
         self.coins -= self.current_bet
@@ -314,11 +314,6 @@ class MainWindow(QWidget):
         self.coins += reward
         self.update_coin_label()
         self.validate_bet()
-
-        # LOG RESULT after coins are updated
-        self._metrics.log_result(result_tuple=(r1,r2,r3), 
-                                 reward=reward,
-                                 coin_after=self.coins) #coins updated sopra
 
         if reward > 0:
             play_sfx("win.wav")
