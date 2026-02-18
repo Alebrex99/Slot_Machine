@@ -1,6 +1,8 @@
 import random
 
 # Constants
+WIN_PERCENTAGE = 20
+
 # List of symbols
 SYMBOLS = ["banana", "bar", "bell", "cherry", "diamond", "grape", "lemon", "seven", "star"]
 
@@ -16,33 +18,6 @@ REWARD_TABLE = {
     "grape": {"3": 15, "2": 1},
     "lemon": {"3": 10, "2": 1},
 }
-
-CONVERTING_TABLE = {
-    10: 0.813,
-    3: 0.244,
-    1.5: 0.1216,
-    1: 0.081,
-    0.67: 0.0545,
-    0.33: 0.027,
-    0.1: 0.008
-}
-# valori attesi 
-'''
-valore atteso(IN)	    win_percentage(OUT)
-10	                    0.813
-3	                    0.244
-1.5	                    0.1216
-1	                    0.081
-0.67	                0.0545
-0.33	                0.027
-0.1	                    0.008
-'''
-def receive_expected_value(expected_value):
-    EXPECTED_VALUE = expected_value
-    #VALORE ATTESO: modificato con input del ricercatore
-    global WIN_PERCENTAGE
-    WIN_PERCENTAGE = CONVERTING_TABLE[EXPECTED_VALUE] #PARAMETRO VINCITA che controlla il valore atteso predefinito
-        
 
 # FORZAMENTO PROBABILITA' DI VITTORIA PRE DEFINITA: WIN_PERCENTAGE = 20% -> 20% di vittoria (3 o 2 simboli uguali), 80% di perdita (3 simboli diversi)
 def spin_reels():
@@ -107,6 +82,13 @@ def spin_reels():
         # LOSS = (100 - WIN_PERCENTAGE)% chance: all symbols different
         symbols = random.sample(SYMBOLS, 3) # prendo 3 simboli diversi dalla lista SYMBOLS
         return tuple(symbols)
+        #result = []
+        #available = SYMBOLS.copy()
+        #for _ in range(3):
+        #    symbol = random.choice(available)
+        #    result.append(symbol)
+        #    available.remove(symbol)
+        #return tuple(result)
 
 
 def calculate_reward(result, bet_multiplier=1.0):

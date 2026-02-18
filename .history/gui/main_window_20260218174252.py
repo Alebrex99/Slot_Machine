@@ -9,6 +9,8 @@ from core.redeem_logic import validate_redeem_code
 from gui.redeem_dialog import RedeemDialog
 
 from utils.file_manager import get_path
+import core.metrics as metrics
+from network.signal_bridge import SignalBridge
 
 # Constants
 INITIAL_COINS = 10
@@ -82,6 +84,11 @@ class MainWindow(QWidget):
         self.bet_display.setMinimumWidth(300)
         self.bet_display.setMinimumHeight(100)
         self.bet_display.setStyleSheet("font-size: 40px; font-weight: 700; border: 2px solid #333; padding: 10px;")
+        # Validator: solo numeri con max 2 decimali
+        #validator = QDoubleValidator(0.00, 999999.99, 2)
+        #validator.setNotation(QDoubleValidator.StandardNotation)
+        #self.bet_display.setValidator(validator)
+        # Connect editing finished to validation
         self.bet_display.editingFinished.connect(self.on_bet_manual_input)
 
         self.bet_up_btn = QPushButton("▲")
@@ -178,6 +185,14 @@ class MainWindow(QWidget):
         self.spin_timer.timeout.connect(self.animate_spin)
 
         # ===============================
+        #     SIGNAL BRIDGE (remote)
+        # ===============================
+        # bridge allows the future TCP server thread to update the GUI safely
+        self.bridge = SignalBridge()
+        self.bridge.set_coins_signal.connect(self.on_remote_set_coins)
+        self.bridge.send_message_signal.connect(self.on_remote_message)
+
+        # ===============================
         #            START BGM
         # ===============================
         play_bgm("bgm.mp3")
@@ -260,10 +275,12 @@ class MainWindow(QWidget):
             return
 
         play_sfx("spin.wav")
-        #self.coins -= self.spin_cost
+
+        # Log BET before deducting coins (coin_before = current balance)
+        metrics.log_bet(self.current_bet, self.coins)
+
         self.coins -= self.current_bet
         self.update_coin_label()
-        #spin_reels() -> ad esempio ("cherry", "cherry", "lemon")
         self.final_result = spin_reels() #restituisce una tupla di 3 simboli, ad esempio ("cherry", "cherry", "lemon")
 
         self.current_frame = 0
@@ -297,6 +314,15 @@ class MainWindow(QWidget):
         self.update_coin_label()
         self.validate_bet()
 
+        # Build result string and log it
+        if r1 == r2 == r3 and reward > 0:
+            result_str = f"WIN_3_MATCH_+{reward:.2f}"
+        elif reward > 0:
+            result_str = f"WIN_2_MATCH_+{reward:.2f}"
+        else:
+            result_str = "LOSS"
+        metrics.log_result(result_str, self.coins)
+
         if reward > 0:
             play_sfx("win.wav")
             self.watermark.setText(f"Hai vinto +{reward:.2f}")
@@ -312,3 +338,17 @@ class MainWindow(QWidget):
             play_sfx("click.wav")
             return coins_to_add
         return 0
+
+    # -----------------------------------------------------------------------
+    # Remote command slots (called via SignalBridge from future TCP server)
+    # -----------------------------------------------------------------------
+    def on_remote_set_coins(self, amount: float) -> None:
+        """Slot: update coin balance when SET_COINS is received from researcher."""
+        self.coins = amount
+        self.update_coin_label()
+        self.validate_bet()
+        metrics.log_charge_coin(self.coins)
+
+    def on_remote_message(self, text: str) -> None:
+        """Slot: display researcher message in the GUI when SEND_MSG is received."""
+        self.watermark.setText(text)

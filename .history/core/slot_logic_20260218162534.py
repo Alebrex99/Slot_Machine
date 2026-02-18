@@ -1,6 +1,29 @@
 import random
 
 # Constants
+WIN_PERCENTAGE = 20 #PARAMETRO VINCITA che controlla il valore atteso predefinito
+EXPECTED_VALUE = 0.67 #VALORE ATTESO: modificato con input del ricercatore
+# valori attesi 
+'''
+valore atteso(IN)	    win_percentage(OUT)
+10	                    0.813
+3	                    0.244
+1.5	                    0.1216
+1	                    0.081
+0.67	                0.0545
+0.33	                0.027
+0.1	                    0.008
+'''
+CONVERTING_TABLE = {
+    10: 0.813,
+    3: 0.244,
+    1.5: 0.1216,
+    1: 0.081,
+    0.67: 0.0545,
+    0.33: 0.027,
+    0.1: 0.008
+}
+
 # List of symbols
 SYMBOLS = ["banana", "bar", "bell", "cherry", "diamond", "grape", "lemon", "seven", "star"]
 
@@ -16,33 +39,6 @@ REWARD_TABLE = {
     "grape": {"3": 15, "2": 1},
     "lemon": {"3": 10, "2": 1},
 }
-
-CONVERTING_TABLE = {
-    10: 0.813,
-    3: 0.244,
-    1.5: 0.1216,
-    1: 0.081,
-    0.67: 0.0545,
-    0.33: 0.027,
-    0.1: 0.008
-}
-# valori attesi 
-'''
-valore atteso(IN)	    win_percentage(OUT)
-10	                    0.813
-3	                    0.244
-1.5	                    0.1216
-1	                    0.081
-0.67	                0.0545
-0.33	                0.027
-0.1	                    0.008
-'''
-def receive_expected_value(expected_value):
-    EXPECTED_VALUE = expected_value
-    #VALORE ATTESO: modificato con input del ricercatore
-    global WIN_PERCENTAGE
-    WIN_PERCENTAGE = CONVERTING_TABLE[EXPECTED_VALUE] #PARAMETRO VINCITA che controlla il valore atteso predefinito
-        
 
 # FORZAMENTO PROBABILITA' DI VITTORIA PRE DEFINITA: WIN_PERCENTAGE = 20% -> 20% di vittoria (3 o 2 simboli uguali), 80% di perdita (3 simboli diversi)
 def spin_reels():
@@ -80,6 +76,7 @@ def spin_reels():
     Spins the slot machine and returns 3 symbols (tuple).
     WIN_PERCENTAGE controls overall win probability (3 or 2 matching symbols).
     """
+    WIN_PERCENTAGE = CONVERTING_TABLE[EXPECTED_VALUE]
     # genero un numero casuale (distr. uniforme) tra 0 e 1. Quindi la variabile X<a% è vera con probabilità a%
     if random.random() < (WIN_PERCENTAGE / 100):
         # WIN = Probabilità di vittoria con 3 simboli uguali o 2 simboli uguali

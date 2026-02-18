@@ -77,11 +77,17 @@ class MainWindow(QWidget):
         self.bet_display.setStyleSheet("font-size: 40px; font-weight: 700; border: 2px solid #333; padding: 10px;")
         """
         self.bet_display = QLineEdit("0.00")
+        self.input = ""
         self.bet_display.setObjectName("bet_display")
         self.bet_display.setAlignment(Qt.AlignCenter)
         self.bet_display.setMinimumWidth(300)
         self.bet_display.setMinimumHeight(100)
         self.bet_display.setStyleSheet("font-size: 40px; font-weight: 700; border: 2px solid #333; padding: 10px;")
+        # Validator: solo numeri con max 2 decimali
+        validator = QDoubleValidator(0.00, 999999.99, 2)
+        validator.setNotation(QDoubleValidator.StandardNotation)
+        self.bet_display.setValidator(validator)
+        # Connect editing finished to validation
         self.bet_display.editingFinished.connect(self.on_bet_manual_input)
 
         self.bet_up_btn = QPushButton("▲")

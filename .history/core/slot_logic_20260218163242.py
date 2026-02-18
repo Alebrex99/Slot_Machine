@@ -1,6 +1,29 @@
 import random
 
 # Constants
+CONVERTING_TABLE = {
+    10: 0.813,
+    3: 0.244,
+    1.5: 0.1216,
+    1: 0.081,
+    0.67: 0.0545,
+    0.33: 0.027,
+    0.1: 0.008
+}
+
+
+# valori attesi 
+'''
+valore atteso(IN)	    win_percentage(OUT)
+10	                    0.813
+3	                    0.244
+1.5	                    0.1216
+1	                    0.081
+0.67	                0.0545
+0.33	                0.027
+0.1	                    0.008
+'''
+
 # List of symbols
 SYMBOLS = ["banana", "bar", "bell", "cherry", "diamond", "grape", "lemon", "seven", "star"]
 
@@ -17,27 +40,7 @@ REWARD_TABLE = {
     "lemon": {"3": 10, "2": 1},
 }
 
-CONVERTING_TABLE = {
-    10: 0.813,
-    3: 0.244,
-    1.5: 0.1216,
-    1: 0.081,
-    0.67: 0.0545,
-    0.33: 0.027,
-    0.1: 0.008
-}
-# valori attesi 
-'''
-valore atteso(IN)	    win_percentage(OUT)
-10	                    0.813
-3	                    0.244
-1.5	                    0.1216
-1	                    0.081
-0.67	                0.0545
-0.33	                0.027
-0.1	                    0.008
-'''
-def receive_expected_value(expected_value):
+def receive_expected_value_input(expected_value):
     EXPECTED_VALUE = expected_value
     #VALORE ATTESO: modificato con input del ricercatore
     global WIN_PERCENTAGE
