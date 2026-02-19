@@ -328,7 +328,6 @@ class MainWindow(QWidget):
         # LOG RESULT after coins are updated
         self._metrics.log_result(result_tuple=(r1,r2,r3), 
                                  reward=reward,
-                                 bet=self.current_bet,
                                  coin_after=self.coins) #coins updated sopra
 
         if reward > 0:

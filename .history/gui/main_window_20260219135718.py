@@ -191,9 +191,9 @@ class MainWindow(QWidget):
         self.setLayout(root)
 
         # Timer animation
-        ''' ogni frame_speeds (80 ms) viene richiamato il signal (animate_spin -  la funzione costantemente reinvocata).
-        Tempo totale animazione = spin_speed * roll_frames = 80ms * 50 = 4000ms = 4 secondi
-        FPS = 1000ms / spin_speed = 1000ms / 80ms = 12.5 FPS'''
+        # ogni frame_speeds (80 ms) viene richiamato il signal (animate_spin).
+        # la funzione costantemente reinvocata è animate_spin
+        # Tempo totale animazione = spin_speed * roll_frames = 80ms * 50 = 4000ms = 4 secondi
         self.spin_timer.timeout.connect(self.animate_spin)
 
         # ===============================
@@ -328,7 +328,6 @@ class MainWindow(QWidget):
         # LOG RESULT after coins are updated
         self._metrics.log_result(result_tuple=(r1,r2,r3), 
                                  reward=reward,
-                                 bet=self.current_bet,
                                  coin_after=self.coins) #coins updated sopra
 
         if reward > 0:

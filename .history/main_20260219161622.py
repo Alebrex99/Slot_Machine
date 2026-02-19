@@ -13,13 +13,13 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     load_stylesheet(app)
 
-    # ALL'AVVIO APP: viene creato metrics_logger, che prepara il file CSV (solo colonne) metriche
+    # ALL'AVVIO APP: viene creato metrics_logger per la preparazione del file CSV (solo colonne)
     metrics_logger = MetricsLogger()  # Initialize metrics logger (creates file if needed)
     
-    # REMOTE RESEARCHER: ha il compito di avviare app con i parametri
+    # REMOTE RESEARCHER
     remote_researcher = RemoteResearcher(metrics_logger=metrics_logger)  # Initialize remote researcher (waits for input)
     remote_researcher.set_input_data()  # Wait for researcher input before proceeding
-    remote_researcher.start_metrics()  # Log session start and enable metrics with expected value
+    remote_researcher.start_session()  # Log session start and enable metrics with expected value
     
     window = MainWindow(metrics_logger=metrics_logger)
     window.show()

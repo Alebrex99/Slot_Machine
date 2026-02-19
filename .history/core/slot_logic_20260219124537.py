@@ -38,10 +38,10 @@ valore atteso(IN)	    win_percentage(OUT)
 0.1	                    0.008
 '''
 def update_expected_value(expected_value):
-    expected_value = expected_value
+    EXPECTED_VALUE = expected_value
     #VALORE ATTESO: modificato con input del ricercatore
-    global win_percentage
-    win_percentage = CONVERTING_TABLE[expected_value] #PARAMETRO VINCITA che controlla il valore atteso predefinito
+    global WIN_PERCENTAGE
+    WIN_PERCENTAGE = CONVERTING_TABLE[EXPECTED_VALUE] #PARAMETRO VINCITA che controlla il valore atteso predefinito
         
 
 # FORZAMENTO PROBABILITA' DI VITTORIA PRE DEFINITA: WIN_PERCENTAGE = 20% -> 20% di vittoria (3 o 2 simboli uguali), 80% di perdita (3 simboli diversi)
@@ -81,7 +81,7 @@ def spin_reels():
     WIN_PERCENTAGE controls overall win probability (3 or 2 matching symbols).
     """
     # genero un numero casuale (distr. uniforme) tra 0 e 1. Quindi la variabile X<a% è vera con probabilità a%
-    if random.random() < (win_percentage / 100):
+    if random.random() < (WIN_PERCENTAGE / 100):
         # WIN = Probabilità di vittoria con 3 simboli uguali o 2 simboli uguali
         # P (3-of-a-kind) = 30% delle vittorie, P (2-of-a-kind) = 70% delle vittorie
         # P (3-of-a-kind) = 0.3 * WIN_PERCENTAGE = 0.3*0.2 = 6%, P (2-of-a-kind) = 0.7 * WIN_PERCENTAGE = 0.7*0.2 = 14% -> totale 20% di vittoria

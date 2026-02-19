@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from core.slot_logic import CONVERTING_TABLE, update_expected_value
+from core.slot_logic import CONVERTING_TABLE, receive_expected_value
 
 # CSV column headers
 _CSV_COLUMNS = ["TIMESTAMP", "EVENT_TYPE", "BET", "EXPECTED_VALUE", "RESULT", "COIN", "MESSAGE"]
@@ -30,6 +30,7 @@ class MetricsLogger:
         self._csv_path = csv_path
         self._metrics_enabled: bool = False
         self._current_expected_value: Optional[float] = None
+
         # Create file with headers if it does not exist
         if not os.path.exists(self._csv_path):
             self._write_row(_CSV_COLUMNS)
@@ -50,7 +51,6 @@ class MetricsLogger:
         """Returns the currently configured expected value, or None."""
         return self._current_expected_value
 
-    # Deve essere chiamata dal ricercatore esterno (per ora in main.py)
     def enable_metrics(self, expected_value: float) -> None:
         """Activates gameplay logging and configures WIN_PERCENTAGE.
 
@@ -70,11 +70,11 @@ class MetricsLogger:
         self._metrics_enabled = True
 
         # Update WIN_PERCENTAGE in slot_logic
-        update_expected_value(expected_value)
+        receive_expected_value(expected_value)
 
         self._log(
             event_type="START_METRICS",
-            expected_value=expected_value
+            message=f"expected_value={expected_value}"
         )
 
     def log_session_start(self) -> None:
@@ -102,13 +102,12 @@ class MetricsLogger:
             coin=coin_before,
         )
 
-    def log_result(self, result_tuple: tuple, reward: float, bet:float, coin_after: float) -> None:
+    def log_result(self, result_tuple: tuple, reward: float, coin_after: float) -> None:
         """Logs a RESULT event. Only written when metrics_enabled is True.
 
         Args:
             result_tuple: The 3-symbol tuple from spin_reels() e.g. ("cherry", "cherry", "lemon").
             reward: Computed reward after bet multiplier (0 if loss).
-            bet: The bet amount that was placed.
             coin_after: Coin balance after reward is applied.
         """
         if not self._metrics_enabled:
@@ -120,7 +119,6 @@ class MetricsLogger:
             event_type="RESULT",
             expected_value=self._current_expected_value,
             result=result_str,
-            bet=bet,
             coin=coin_after,
         )
 
@@ -161,7 +159,7 @@ class MetricsLogger:
             )
 
         self._current_expected_value = new_expected_value
-        update_expected_value(new_expected_value)
+        receive_expected_value(new_expected_value)
 
         self._log(
             event_type="CHANGE_EXPECTED_VALUE",
@@ -211,8 +209,7 @@ class MetricsLogger:
             coin: Coin balance at time of event (optional).
             message: Additional message string (optional).
         """
-        # mantieni fino ai centesimi
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-4]
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         row = [
             timestamp,
@@ -232,7 +229,6 @@ class MetricsLogger:
         Args:
             row: List of values to write.
         """
-        #apre + crea il file
         with open(self._csv_path, "a", newline="", encoding="utf-8") as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(row)

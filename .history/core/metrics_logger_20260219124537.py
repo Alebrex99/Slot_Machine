@@ -30,6 +30,7 @@ class MetricsLogger:
         self._csv_path = csv_path
         self._metrics_enabled: bool = False
         self._current_expected_value: Optional[float] = None
+
         # Create file with headers if it does not exist
         if not os.path.exists(self._csv_path):
             self._write_row(_CSV_COLUMNS)
@@ -50,7 +51,6 @@ class MetricsLogger:
         """Returns the currently configured expected value, or None."""
         return self._current_expected_value
 
-    # Deve essere chiamata dal ricercatore esterno (per ora in main.py)
     def enable_metrics(self, expected_value: float) -> None:
         """Activates gameplay logging and configures WIN_PERCENTAGE.
 
@@ -102,13 +102,12 @@ class MetricsLogger:
             coin=coin_before,
         )
 
-    def log_result(self, result_tuple: tuple, reward: float, bet:float, coin_after: float) -> None:
+    def log_result(self, result_tuple: tuple, reward: float, coin_after: float) -> None:
         """Logs a RESULT event. Only written when metrics_enabled is True.
 
         Args:
             result_tuple: The 3-symbol tuple from spin_reels() e.g. ("cherry", "cherry", "lemon").
             reward: Computed reward after bet multiplier (0 if loss).
-            bet: The bet amount that was placed.
             coin_after: Coin balance after reward is applied.
         """
         if not self._metrics_enabled:
@@ -120,7 +119,6 @@ class MetricsLogger:
             event_type="RESULT",
             expected_value=self._current_expected_value,
             result=result_str,
-            bet=bet,
             coin=coin_after,
         )
 
@@ -211,8 +209,7 @@ class MetricsLogger:
             coin: Coin balance at time of event (optional).
             message: Additional message string (optional).
         """
-        # mantieni fino ai centesimi
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-4]
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         row = [
             timestamp,

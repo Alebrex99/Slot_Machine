@@ -37,6 +37,7 @@ class MainWindow(QWidget):
         #          LOG SETUP
         # ===============================
         self._metrics = metrics_logger
+        self._metrics.log_session_start()  # Log session start
 
         # ===============================
         #          WINDOW SETUP
@@ -173,14 +174,6 @@ class MainWindow(QWidget):
         reels.addWidget(self.reel3)
         reels.addStretch()
 
-        #inserimento in basso a sinistra del controllo audio (per ora solo un bottone per attivare/disattivare la musica, da vedere se è meglio mettere un toggle o un semplice bottone che cambia testo da "Music On" a "Music Off")
-        '''self.music_btn = QPushButton("Music Off")
-        self.music_btn.setObjectName("music_btn")
-        self.music_btn.clicked.connect(self.toggle_music)
-        music = QVBoxLayout()
-        music.addWidget(self.music_btn)'''
-        
-        
         root = QVBoxLayout()
         root.addLayout(top)
         root.addStretch()
@@ -191,15 +184,13 @@ class MainWindow(QWidget):
         self.setLayout(root)
 
         # Timer animation
-        ''' ogni frame_speeds (80 ms) viene richiamato il signal (animate_spin -  la funzione costantemente reinvocata).
-        Tempo totale animazione = spin_speed * roll_frames = 80ms * 50 = 4000ms = 4 secondi
-        FPS = 1000ms / spin_speed = 1000ms / 80ms = 12.5 FPS'''
         self.spin_timer.timeout.connect(self.animate_spin)
 
         # ===============================
         #            START BGM
         # ===============================
-        #play_bgm("bgm.mp3")
+        play_bgm("bgm.mp3")
+
 
 
 
@@ -328,7 +319,6 @@ class MainWindow(QWidget):
         # LOG RESULT after coins are updated
         self._metrics.log_result(result_tuple=(r1,r2,r3), 
                                  reward=reward,
-                                 bet=self.current_bet,
                                  coin_after=self.coins) #coins updated sopra
 
         if reward > 0:

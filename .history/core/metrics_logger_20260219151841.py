@@ -108,7 +108,6 @@ class MetricsLogger:
         Args:
             result_tuple: The 3-symbol tuple from spin_reels() e.g. ("cherry", "cherry", "lemon").
             reward: Computed reward after bet multiplier (0 if loss).
-            bet: The bet amount that was placed.
             coin_after: Coin balance after reward is applied.
         """
         if not self._metrics_enabled:

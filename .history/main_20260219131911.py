@@ -1,6 +1,5 @@
 import sys
 from PyQt5.QtWidgets import QApplication
-from core.remote_researcher import RemoteResearcher
 from gui.main_window import MainWindow
 from core.metrics_logger import MetricsLogger
 
@@ -13,13 +12,12 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     load_stylesheet(app)
 
-    # ALL'AVVIO APP: viene creato metrics_logger, che prepara il file CSV (solo colonne) metriche
     metrics_logger = MetricsLogger()  # Initialize metrics logger (creates file if needed)
     
-    # REMOTE RESEARCHER: ha il compito di avviare app con i parametri
-    remote_researcher = RemoteResearcher(metrics_logger=metrics_logger)  # Initialize remote researcher (waits for input)
-    remote_researcher.set_input_data()  # Wait for researcher input before proceeding
-    remote_researcher.start_metrics()  # Log session start and enable metrics with expected value
+    # RICERCATORE ESTERNO: solo dopo aver inserito tutti i dati, da il via alla slot + logging
+    input_value = input("Press Enter to exit..")  # Keep the application running until user input
+    print("Exiting application...", input_value)
+    metrics_logger.enable_metrics(expected_value=0.33)  # Enable logging with desired expected value
     
     window = MainWindow(metrics_logger=metrics_logger)
     window.show()

@@ -19,10 +19,9 @@ if __name__ == "__main__":
     # REMOTE RESEARCHER: ha il compito di avviare app con i parametri
     remote_researcher = RemoteResearcher(metrics_logger=metrics_logger)  # Initialize remote researcher (waits for input)
     remote_researcher.set_input_data()  # Wait for researcher input before proceeding
-    remote_researcher.start_metrics()  # Log session start and enable metrics with expected value
+    remote_researcher.start_session()  # Log session start and enable metrics with expected value
     
-    window = MainWindow(metrics_logger=metrics_logger)
-    window.show()
+ 
  
 
     sys.exit(app.exec_())
