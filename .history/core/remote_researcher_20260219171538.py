@@ -1,17 +1,10 @@
-'''Costruzione di una classe RemoteResearcher che gestisce 
-l'interazione con il ricercatore esterno, inclusi input, log iniziale e 
-abilitazione metriche. Questa classe può essere utilizzata in main.py 
-per semplificare la gestione del flusso di lavoro del ricercatore.
+"""RemoteResearcher: unico responsabile dell'aggiornamento di update_expected_value().
 
-Il ricercatore esterno agisce, prima dell'inizio della renderizzazione della GUI, 
-fornisce i parametri in input che stabiliscono quando avverranno:
-- log iniziale (session start)
-- abilitazione metriche, chiamando enable_metrics() con il valore desiderato di expected_value (es. 0.33)
-- specifica di quando visualizzare i messaggi (in quali momenti precisi) e log messaggi
-- specifica di quando, durante il gioco, modificare l'expected value (es. tempo partecipante = 10 minuti, per 2 min valore atteso 1, per 4 min 3, per 4 min 0.67, ecc..)
-- specifica di quando, durante il gioco, avviene il caricamentento dei coins'''
+Regola fondamentale:
+    update_expected_value() in slot_logic viene chiamata SOLO da set_expected_value() di questa classe.
+    Nessun altro modulo (metrics_logger, main_window) deve chiamarla direttamente.
+"""
 
-from core import metrics_logger
 from core.slot_logic import update_expected_value, CONVERTING_TABLE
 
 
@@ -59,7 +52,6 @@ class RemoteResearcher:
             self.set_expected_value(0.33)
             print(f"[RemoteResearcher] Avvio con DATA='{self._input_data}' expected_value={self._current_expected_value}")
 
-
     def start_metrics(self) -> None:
         """Log SESSION_START e abilita le metriche con l'expected value corrente.
 
@@ -69,7 +61,6 @@ class RemoteResearcher:
         self._metrics_logger.log_session_start()
         if not self._test_mode:
             self._metrics_logger.enable_metrics(expected_value=self._current_expected_value)
-
 
     # ------------------------------------------------------------------
     # Aggiornamento expected value — UNICO punto autorizzato

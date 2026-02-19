@@ -59,7 +59,6 @@ class RemoteResearcher:
             self.set_expected_value(0.33)
             print(f"[RemoteResearcher] Avvio con DATA='{self._input_data}' expected_value={self._current_expected_value}")
 
-
     def start_metrics(self) -> None:
         """Log SESSION_START e abilita le metriche con l'expected value corrente.
 
@@ -69,7 +68,6 @@ class RemoteResearcher:
         self._metrics_logger.log_session_start()
         if not self._test_mode:
             self._metrics_logger.enable_metrics(expected_value=self._current_expected_value)
-
 
     # ------------------------------------------------------------------
     # Aggiornamento expected value — UNICO punto autorizzato

@@ -394,28 +394,21 @@ class MainWindow(QWidget):
             researcher: Istanza di RemoteResearcher, unico autorizzato a cambiare expected_value.
         """
         from core.slot_logic import CONVERTING_TABLE  # CONVERTING_TABLE è in slot_logic, non in metrics_logger
-        self.watermark.setText("TEST MODE: Running statistics...")
+
         self.setEnabled(False)  # disabilita tutta la GUI durante il test
         self.current_bet = 0.10
-        #uso solamente x3 x1 x0.33
-        all_expected_values = CONVERTING_TABLE.keys()  # Prende tutti i valori di expected_value definiti in CONVERTING_TABLE 
-        expected_values_used_reduced = [3.0, 1.0, 0.33]
-        for expected_value in expected_values_used_reduced:
-            researcher.set_expected_value(expected_value)          # aggiorna WIN_PERCENTAGE in slot_logic
-            self._metrics.enable_metrics(expected_value=expected_value)  # aggiorna _current_expected_value nel logger → usato in ogni log_bet/log_result
+
+        for expected_value in CONVERTING_TABLE.keys():
+            researcher.set_expected_value(expected_value)   # unico punto autorizzato per update_expected_value
+            self._metrics.enable_metrics(expected_value=expected_value)  # solo log CSV
+
             self.coins = 1000.0
             self.update_coin_label()
             self.update_bet_display()
 
             for _ in range(100):
                 self._execute_spin_logic()  # spin sincrono, nessun QTimer
-        
-        # a fine processo di testing riporto tutto quanto come se il test non fosse stato mai fatto
-        self.coins = INITIAL_COINS
-        self.update_coin_label()
-        self.current_bet = 0.00
-        self.update_bet_display()
-        self.watermark.setText("UPV Slot Machine")
+
         self.setEnabled(True)  # riabilita la GUI al termine
         self.validate_bet()
         print("[TEST] testing_statistics completato.")

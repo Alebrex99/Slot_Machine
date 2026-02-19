@@ -23,10 +23,6 @@ if __name__ == "__main__":
     
     window = MainWindow(metrics_logger=metrics_logger)
     window.show()
-
-    # Se TEST_MODE è attivo, avvia il test automatico sincrono.
-    # La GUI rimane visibile ma disabilitata per tutta la durata del test.
-    if remote_researcher.test_mode:
-        window.testing_statistics(researcher=remote_researcher)
+ 
 
     sys.exit(app.exec_())

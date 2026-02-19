@@ -70,7 +70,6 @@ class RemoteResearcher:
         if not self._test_mode:
             self._metrics_logger.enable_metrics(expected_value=self._current_expected_value)
 
-
     # ------------------------------------------------------------------
     # Aggiornamento expected value — UNICO punto autorizzato
     # ------------------------------------------------------------------

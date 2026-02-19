@@ -353,69 +353,22 @@ class MainWindow(QWidget):
         self._metrics.log_session_end()
         super().closeEvent(event)
         
-     
-    # Creato per includere on_spin() logic + show_final_result() logic in un unico metodo sincrono, da usare in testing_statistics() per evitare i 4 secondi di attesa dell'animazione QTimer. Non è chiamato da nessuna altra parte.   
-    def _execute_spin_logic(self) -> None:
-        """Spin sincrono senza animazione QTimer. Usato solo da testing_statistics().
-
-        Equivale a on_spin() + show_final_result() ma termina immediatamente,
-        consentendo l'uso in un loop senza attendere i ~4 secondi di animazione.
-        """
-        if self.current_bet <= 0 or self.current_bet > self.coins:
-            return  # puntata non valida: salta lo spin
-
-        self._metrics.log_bet(self.current_bet, coin_before=self.coins)
-        self.coins -= self.current_bet
-
-        r1, r2, r3 = spin_reels()
-        reward = calculate_reward([r1, r2, r3], self.current_bet)
-        self.coins += reward
-
-        self._metrics.log_result(
-            result_tuple=(r1, r2, r3),
-            reward=reward,
-            bet=self.current_bet,
-            coin_after=self.coins,
-        )
-
-    def testing_statistics(self, researcher) -> None:
-        """Modalità TEST: spin automatici sincroni per tutti gli expected value in CONVERTING_TABLE.
-
-        Chiamata da main.py quando researcher.test_mode è True, dopo window.show().
-        La GUI è disabilitata per tutta la durata del test.
-
-        Comportamento:
-        - bet fissa a 0.10, coins resettate a 1000 per ogni expected value
-        - 100 spin sincroni per ogni expected value
-        - solo RemoteResearcher aggiorna WIN_PERCENTAGE tramite set_expected_value()
-        - log CSV funziona normalmente
-
-        Args:
-            researcher: Istanza di RemoteResearcher, unico autorizzato a cambiare expected_value.
-        """
-        from core.slot_logic import CONVERTING_TABLE  # CONVERTING_TABLE è in slot_logic, non in metrics_logger
-        self.watermark.setText("TEST MODE: Running statistics...")
-        self.setEnabled(False)  # disabilita tutta la GUI durante il test
-        self.current_bet = 0.10
-        #uso solamente x3 x1 x0.33
-        all_expected_values = CONVERTING_TABLE.keys()  # Prende tutti i valori di expected_value definiti in CONVERTING_TABLE 
-        expected_values_used_reduced = [3.0, 1.0, 0.33]
-        for expected_value in expected_values_used_reduced:
-            researcher.set_expected_value(expected_value)          # aggiorna WIN_PERCENTAGE in slot_logic
-            self._metrics.enable_metrics(expected_value=expected_value)  # aggiorna _current_expected_value nel logger → usato in ogni log_bet/log_result
-            self.coins = 1000.0
-            self.update_coin_label()
-            self.update_bet_display()
-
-            for _ in range(100):
-                self._execute_spin_logic()  # spin sincrono, nessun QTimer
         
-        # a fine processo di testing riporto tutto quanto come se il test non fosse stato mai fatto
-        self.coins = INITIAL_COINS
+    def testing_statistics(self):
+        """funzione che, non appena l'applicazione viene avviata, automaticamente esegue questi passaggi, se chiamata,
+        - imposta la current_bet a 0.10
+        - imposta il valore di coins a 1000
+        - esegue 100 spin automatici con bet di 0.10 per ogni specifico expected value
+        - ogni expected value viene preso dalla CONVERTING_TABLE, quindi vengono testati tutti i valori di expected value
+          quali : 0.00, 0.33, 0.67, 1.00, 1.50, 3.00, 10.00
+        - la registrazione dei log funziona normalmente all'avvio dell'applicazione."""
+        from core.metrics_logger import CONVERTING_TABLE, update_expected_value
+        self.current_bet = 0.10
+        self.coins = 1000
         self.update_coin_label()
-        self.current_bet = 0.00
         self.update_bet_display()
-        self.watermark.setText("UPV Slot Machine")
-        self.setEnabled(True)  # riabilita la GUI al termine
-        self.validate_bet()
-        print("[TEST] testing_statistics completato.")
+
+        for expected_value in CONVERTING_TABLE.keys():
+            self._metrics.enable_metrics(expected_value=expected_value)
+            for _ in range(100):
+                self.on_spin()

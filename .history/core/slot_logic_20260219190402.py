@@ -107,13 +107,6 @@ def spin_reels():
         # LOSS = (100 - WIN_PERCENTAGE)% chance: all symbols different
         symbols = random.sample(SYMBOLS, 3) # prendo 3 simboli diversi dalla lista SYMBOLS
         return tuple(symbols)
-        #result = []
-        #available = SYMBOLS.copy()
-        #for _ in range(3):
-        #    symbol = random.choice(available)
-        #    result.append(symbol)
-        #    available.remove(symbol)
-        #return tuple(result)
 
 
 def calculate_reward(result, bet_multiplier=1.0):

@@ -398,7 +398,7 @@ class MainWindow(QWidget):
         self.setEnabled(False)  # disabilita tutta la GUI durante il test
         self.current_bet = 0.10
         #uso solamente x3 x1 x0.33
-        all_expected_values = CONVERTING_TABLE.keys()  # Prende tutti i valori di expected_value definiti in CONVERTING_TABLE 
+        expected_values_used = CONVERTING_TABLE.keys()  # Prende tutti i valori di expected_value definiti in CONVERTING_TABLE 
         expected_values_used_reduced = [3.0, 1.0, 0.33]
         for expected_value in expected_values_used_reduced:
             researcher.set_expected_value(expected_value)          # aggiorna WIN_PERCENTAGE in slot_logic
