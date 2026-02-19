@@ -28,11 +28,9 @@ class RemoteResearcher:
         input("Press ENTER to start application with DATA: " + self._input_data)  # Wait for user to press Enter again before starting the application
         
         self.set_expected_value(0.33)  # Set initial expected value (can be modified based on input)
-        
         # Update WIN_PERCENTAGE in slot_logic
         update_expected_value(expected_value=self._current_expected_value)
         print("Starting application... ", self._input_data)
-
 
     def start_metrics(self):
         # dopo che il ricercatore ha dato il via, avviene il logging iniziale e l'abilitazione metriche

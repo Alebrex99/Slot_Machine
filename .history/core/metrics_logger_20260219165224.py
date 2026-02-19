@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from core.slot_logic import CONVERTING_TABLE
+from core.slot_logic import CONVERTING_TABLE, update_expected_value
 
 # CSV column headers
 _CSV_COLUMNS = ["TIMESTAMP", "EVENT_TYPE", "BET", "EXPECTED_VALUE", "RESULT", "COIN", "MESSAGE"]
@@ -158,6 +158,7 @@ class MetricsLogger:
             )
 
         self._current_expected_value = new_expected_value
+        update_expected_value(new_expected_value)
 
         self._log(
             event_type="CHANGE_EXPECTED_VALUE",

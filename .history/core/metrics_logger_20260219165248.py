@@ -158,6 +158,7 @@ class MetricsLogger:
             )
 
         self._current_expected_value = new_expected_value
+        update_expected_value(new_expected_value)
 
         self._log(
             event_type="CHANGE_EXPECTED_VALUE",

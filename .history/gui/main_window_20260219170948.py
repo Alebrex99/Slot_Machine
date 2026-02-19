@@ -367,7 +367,6 @@ class MainWindow(QWidget):
         self.coins = 1000
         self.update_coin_label()
         self.update_bet_display()
-        self.validate_bet()
 
         for expected_value in CONVERTING_TABLE.keys():
             self._metrics.enable_metrics(expected_value=expected_value)

@@ -12,7 +12,6 @@ fornisce i parametri in input che stabiliscono quando avverranno:
 - specifica di quando, durante il gioco, avviene il caricamentento dei coins'''
 
 from core import metrics_logger
-from core.slot_logic import update_expected_value
 
 
 class RemoteResearcher:
@@ -26,17 +25,13 @@ class RemoteResearcher:
         '''Metodo per gestire l'input del ricercatore esterno. Può essere chiamato in qualsiasi momento per aggiornare i dati.'''
         self._input_data = input("Insert DATA: ")  # Keep the application running until user input
         input("Press ENTER to start application with DATA: " + self._input_data)  # Wait for user to press Enter again before starting the application
-        
-        self.set_expected_value(0.33)  # Set initial expected value (can be modified based on input)
-        
-        # Update WIN_PERCENTAGE in slot_logic
-        update_expected_value(expected_value=self._current_expected_value)
         print("Starting application... ", self._input_data)
-
 
     def start_metrics(self):
         # dopo che il ricercatore ha dato il via, avviene il logging iniziale e l'abilitazione metriche
         self._metrics_logger.log_session_start()  # Log session start
+        self.set_expected_value(0.33)  # Set initial expected value (can be modified based on input)
+        self._current_expected_value = 0.33  # Set initial expected value (can be modified based on input)
         self._metrics_logger.enable_metrics(expected_value=self._current_expected_value)  # Enable logging with desired expected value
 
     def set_expected_value(self, expected_value):

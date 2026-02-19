@@ -33,7 +33,6 @@ class RemoteResearcher:
         update_expected_value(expected_value=self._current_expected_value)
         print("Starting application... ", self._input_data)
 
-
     def start_metrics(self):
         # dopo che il ricercatore ha dato il via, avviene il logging iniziale e l'abilitazione metriche
         self._metrics_logger.log_session_start()  # Log session start

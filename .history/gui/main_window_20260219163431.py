@@ -11,7 +11,7 @@ from core.metrics_logger import MetricsLogger   # ← NEW
 from utils.file_manager import get_path
 
 # Constants
-INITIAL_COINS = 10
+INITIAL_COINS = 1000
 
 
 class MainWindow(QWidget):
@@ -360,16 +360,4 @@ class MainWindow(QWidget):
         - imposta il valore di coins a 1000
         - esegue 100 spin automatici con bet di 0.10 per ogni specifico expected value
         - ogni expected value viene preso dalla CONVERTING_TABLE, quindi vengono testati tutti i valori di expected value
-          quali : 0.00, 0.33, 0.67, 1.00, 1.50, 3.00, 10.00
-        - la registrazione dei log funziona normalmente all'avvio dell'applicazione."""
-        from core.metrics_logger import CONVERTING_TABLE, update_expected_value
-        self.current_bet = 0.10
-        self.coins = 1000
-        self.update_coin_label()
-        self.update_bet_display()
-        self.validate_bet()
-
-        for expected_value in CONVERTING_TABLE.keys():
-            self._metrics.enable_metrics(expected_value=expected_value)
-            for _ in range(100):
-                self.on_spin()
+          quali : 0.00, 0.33, 0.67, 1.00, 1.50, 3.00, 10.00"""

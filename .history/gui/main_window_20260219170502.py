@@ -354,22 +354,68 @@ class MainWindow(QWidget):
         super().closeEvent(event)
         
         
-    def testing_statistics(self):
-        """funzione che, non appena l'applicazione viene avviata, automaticamente esegue questi passaggi, se chiamata,
-        - imposta la current_bet a 0.10
-        - imposta il valore di coins a 1000
-        - esegue 100 spin automatici con bet di 0.10 per ogni specifico expected value
-        - ogni expected value viene preso dalla CONVERTING_TABLE, quindi vengono testati tutti i valori di expected value
-          quali : 0.00, 0.33, 0.67, 1.00, 1.50, 3.00, 10.00
-        - la registrazione dei log funziona normalmente all'avvio dell'applicazione."""
-        from core.metrics_logger import CONVERTING_TABLE, update_expected_value
+    def _execute_spin_logic(self) -> None:
+        """Esegue un singolo spin in modo SINCRONO, senza animazione QTimer.
+
+        Usato esclusivamente da testing_statistics() per evitare che il loop
+        attenda la fine dell'animazione (che richiederebbe spin_speed * roll_frames ms per spin).
+        Logica identica a on_spin() + show_final_result(), ma senza QTimer.
+        """
+        if self.current_bet <= 0 or self.current_bet > self.coins:
+            return  # Puntata non valida: salta questo spin
+
+        # Deduzione bet e log BET
+        self._metrics.log_bet(self.current_bet, coin_before=self.coins)
+        self.coins -= self.current_bet
+
+        # Spin e calcolo reward
+        r1, r2, r3 = spin_reels()
+        reward = calculate_reward([r1, r2, r3], self.current_bet)
+        self.coins += reward
+
+        # Log RESULT
+        self._metrics.log_result(
+            result_tuple=(r1, r2, r3),
+            reward=reward,
+            bet=self.current_bet,
+            coin_after=self.coins,
+        )
+
+    def testing_statistics(self, researcher) -> None:
+        """Modalità TEST: esegue spin automatici sincroni per tutti gli expected value.
+
+        Deve essere chiamata da main.py quando researcher.test_mode è True,
+        DOPO window.show(). La GUI rimane disabilitata per tutta la durata del test.
+
+        Comportamento:
+        - bet fissa a 0.10 per ogni spin
+        - coins resettate a 1000 a ogni cambio di expected value
+        - 100 spin per ogni expected value presente in CONVERTING_TABLE
+        - il log CSV funziona normalmente
+        - al termine della sessione di test la GUI viene riabilitata
+
+        Args:
+            researcher: Istanza di RemoteResearcher (unico autorizzato a cambiare expected_value).
+        """
+        from core.slot_logic import CONVERTING_TABLE  # unica importazione corretta
+
+        self.setEnabled(False)  # Disabilita tutta la GUI durante il test
+
         self.current_bet = 0.10
-        self.coins = 1000
-        self.update_coin_label()
-        self.update_bet_display()
-        self.validate_bet()
 
         for expected_value in CONVERTING_TABLE.keys():
+            # Solo RemoteResearcher aggiorna il WIN_PERCENTAGE
+            researcher.set_expected_value(expected_value)
+            # MetricsLogger registra START_METRICS e aggiorna expected_value interno
             self._metrics.enable_metrics(expected_value=expected_value)
+
+            self.coins = 1000.0  # Reset coins per ogni sessione
+            self.update_coin_label()
+            self.update_bet_display()
+
             for _ in range(100):
-                self.on_spin()
+                self._execute_spin_logic()
+
+        self.setEnabled(True)   # Riabilita la GUI al termine del test
+        self.validate_bet()
+        print("[TEST] testing_statistics completato.")

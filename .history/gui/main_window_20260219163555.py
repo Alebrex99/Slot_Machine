@@ -11,7 +11,7 @@ from core.metrics_logger import MetricsLogger   # ← NEW
 from utils.file_manager import get_path
 
 # Constants
-INITIAL_COINS = 10
+INITIAL_COINS = 1000
 
 
 class MainWindow(QWidget):
@@ -366,7 +366,6 @@ class MainWindow(QWidget):
         self.current_bet = 0.10
         self.coins = 1000
         self.update_coin_label()
-        self.update_bet_display()
         self.validate_bet()
 
         for expected_value in CONVERTING_TABLE.keys():
