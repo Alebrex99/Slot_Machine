@@ -58,13 +58,9 @@ class RemoteResearcher:
             # Imposta expected_value iniziale tramite il metodo autorizzato
             self.set_expected_value(0.33)
             print(f"[RemoteResearcher] Avvio con DATA='{self._input_data}' expected_value={self._current_expected_value}")
-            
-        #SE NON ESSITE UN COTNROLLO REMOTO MA TUTTI I PARAMETRI SONO IMPOSTATI GIA ALL'INIZIO
-        # modificare le funzioni remote in modo che siano chiamate durante il ciclo di vita del gioco
-        # ma con parametri predefiniti per ogni sessione
 
 
-    def start_metrics(self) -> None:
+    def start_session(self) -> None:
         """Log SESSION_START e abilita le metriche con l'expected value corrente.
 
         In TEST_MODE usa il primo valore di CONVERTING_TABLE come placeholder;

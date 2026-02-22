@@ -18,10 +18,8 @@ if __name__ == "__main__":
     
     # REMOTE RESEARCHER: ha il compito di avviare app con i parametri
     remote_researcher = RemoteResearcher(metrics_logger=metrics_logger)  # Initialize remote researcher (waits for input)
-    remote_researcher.set_input_data()  # Wait for researcher input before proceeding: imposta expected_value e test_mode in base a input DATA
-    remote_researcher.start_metrics()  # Log session start and enable metrics with expected value corrente
-    # se TEST_MODE testing_statistics chiama: enable_metrics per abilitare metriche + set_expected_value per iterare su tutti i valori di CONVERTING_TABLE durante il test automatico
-    # se non TEST_MODE, input_data chiama set_expected_value e start_metrics chiama enable_metrics
+    remote_researcher.set_input_data()  # Wait for researcher input before proceeding 
+    remote_researcher.start_metrics()  # Log session start and enable metrics with expected value (di default a lui interno)
     
     window = MainWindow(metrics_logger=metrics_logger)
     window.show()
