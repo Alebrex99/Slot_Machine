@@ -333,6 +333,7 @@ class MainWindow(QWidget):
                                  bet=self.current_bet,
                                  coin_after=self.coins) #coins updated sopra
 
+        #DA MODIFICARE VISUALIZZARE ANCHE IL + BET, NON SOLO IL + REWARD
         if reward > 0:
             play_sfx("win.wav")
             self.watermark.setText(f"Hai vinto +{reward:.2f}")

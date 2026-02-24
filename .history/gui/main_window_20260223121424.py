@@ -321,7 +321,7 @@ class MainWindow(QWidget):
         # Calcolo ricompensa con moltiplicatore pari al valore della puntata 
         # Es. SEVEN (3: 100 ; 2: 10):se punto 0.20 e ottengo 3 SEVEN (premio 100) allora ottengo 20
         # VITTORIA_TOTALE = REWARD_BASE * BET_MULTIPLIER
-        # Da fare cosi: viene impostato in modo predefintio quando vinci es. alla quarta giocata: VITTORIA_TOTALE = BUDGET_INIZIALE - BUDGET_CORRENTE (alla n-esima puntata) + VALORE_PUNTATA (alla n-esima puntata)
+        # Da fare cosi, quando vinci, predefinito, es. alla quarta giocata: VITTORIA_TOTALE = BUDGET_INIZIALE - BUDGET_CORRENTE (alla n-esima puntata) + VALORE_PUNTATA (alla n-esima puntata)
         reward = calculate_reward([r1, r2, r3], self.current_bet)
         self.coins += reward
         self.update_coin_label()
@@ -333,6 +333,7 @@ class MainWindow(QWidget):
                                  bet=self.current_bet,
                                  coin_after=self.coins) #coins updated sopra
 
+        #DA MODIFICARE VISUALIZZARE ANCHE IL + BET, NON SOLO IL + REWARD
         if reward > 0:
             play_sfx("win.wav")
             self.watermark.setText(f"Hai vinto +{reward:.2f}")

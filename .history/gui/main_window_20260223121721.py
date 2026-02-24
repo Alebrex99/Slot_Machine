@@ -333,9 +333,11 @@ class MainWindow(QWidget):
                                  bet=self.current_bet,
                                  coin_after=self.coins) #coins updated sopra
 
+        #VISUALIZZARE ANCHE IL + BET, NON SOLO IL + REWARD
+        reward_displayed = reward + self.current_bet  # mostra il totale vinto, che include anche la puntata restituita in caso di vittoria
         if reward > 0:
             play_sfx("win.wav")
-            self.watermark.setText(f"Hai vinto +{reward:.2f}")
+            self.watermark.setText(f"Hai vinto +{reward_displayed:.2f}")
         else:
             self.watermark.setText("Try again!")
 
