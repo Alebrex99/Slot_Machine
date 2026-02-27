@@ -58,8 +58,6 @@ class MainWindow(QWidget):
         self.bet_counter = 0  # counts from 0 -> increment before each bet to 1..60
         # Condition code: 'E','W','L' (short form). Default to 'E' until researcher sets it.
         self.current_condition = "E"
-        self.current_reward = 0.00
-        
         self.spin_cost = 5
         self.symbol_size = 400
         self.spin_timer = QTimer()
@@ -306,14 +304,10 @@ class MainWindow(QWidget):
         self.bet_counter += 1
         
         # deduct bet from coins (we'll log result after reward is applied)
-        budget_before_spin = self.coins #la salviamo e usiamo dopo solo per mostrare in calculate_reward l'equazione completa come nell'excell
         self.coins -= self.current_bet
         self.update_coin_label()
-        
-        # Cambio logica: prima si calcola la REWARD, poi tramite quella si pesca nella REWARD_TABLE il simbolo, le occorrenze.
-        # chiaramente se le occorrenze sono 2 è casuale la posizione dei simboli uguali, se sono 3 sono tutti uguali
-        self.current_reward = calculate_reward(budget_before_spin, self.current_bet)  
-        self.final_result = spin_reels(self.current_reward) #restituisce una tupla di 3 simboli, ad esempio ("cherry", "cherry", "lemon")
+        #spin_reels() -> ad esempio ("cherry", "cherry", "lemon")
+        self.final_result = spin_reels() #restituisce una tupla di 3 simboli, ad esempio ("cherry", "cherry", "lemon")
 
         self.current_frame = 0
         self.spin_timer.start(self.spin_speed)
@@ -343,8 +337,7 @@ class MainWindow(QWidget):
         # VITTORIA (reward) = BUDGET_INIZIALE (initial_budget) - BUDGET_WIN (prima dello spin) + PUNTATA (current_bet)
         # BUDGET_CORRENTE (current_bet) = BUDGET_WIN (prima dello spin) - PUNTATA 
         # BUDGET_WIN = BUDGET_CORRENTE + PUNTATA
-        #reward = calculate_reward([r1, r2, r3], self.current_bet)
-        reward = self.current_reward
+        reward = calculate_reward([r1, r2, r3], self.current_bet)
         self.coins += reward
         self.update_coin_label()
         self.validate_bet()
@@ -394,14 +387,14 @@ class MainWindow(QWidget):
     #     ISTANCE METHODS TO ACCESS WINDOW INFO (for slot_logic): 
     #     self.coins; self.current_bet, self.bet_counter
     # ------------------------------------------------------------------
-    def get_current_bet_counter(self) -> int:
+    '''def get_current_bet_counter(self) -> int:
         return self.bet_counter
     
     def get_current_bet(self) -> float:
         return self.current_bet
     
     def get_current_coins(self) -> float:
-        return self.coins
+        return self.coins'''
     
     # ------------------------------------------------------------------
     # TESTING STATISTICS (TEST MODE)

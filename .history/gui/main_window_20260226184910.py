@@ -306,14 +306,14 @@ class MainWindow(QWidget):
         self.bet_counter += 1
         
         # deduct bet from coins (we'll log result after reward is applied)
-        budget_before_spin = self.coins #la salviamo e usiamo dopo solo per mostrare in calculate_reward l'equazione completa come nell'excell
+        budget_before_spin = self.coins
         self.coins -= self.current_bet
         self.update_coin_label()
         
         # Cambio logica: prima si calcola la REWARD, poi tramite quella si pesca nella REWARD_TABLE il simbolo, le occorrenze.
         # chiaramente se le occorrenze sono 2 è casuale la posizione dei simboli uguali, se sono 3 sono tutti uguali
-        self.current_reward = calculate_reward(budget_before_spin, self.current_bet)  
-        self.final_result = spin_reels(self.current_reward) #restituisce una tupla di 3 simboli, ad esempio ("cherry", "cherry", "lemon")
+        self.current_reward = calculate_reward(budget_before_spin, self.current_bet)  # per ora passo None, poi lo implemento con la nuova logica
+        self.final_result = spin_reels() #restituisce una tupla di 3 simboli, ad esempio ("cherry", "cherry", "lemon")
 
         self.current_frame = 0
         self.spin_timer.start(self.spin_speed)

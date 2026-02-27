@@ -201,7 +201,9 @@ def calculate_reward(budget_before_spin, current_bet):
     global initial_budget_before, initial_budget_during, initial_budget_after
     # in che fase siamo?
     current_bet_counter = window.get_current_bet_counter()  # ottieni il numero della puntata corrente (1-based)
-    # da 1-20 -> PHASE_BEFORE, da 21-40 -> PHASE_DURING, da 41-60 -> PHASE_AFTER
+    # se arrivo a 41, è after quindi per usare 1 sola mappa, lo clampo a 21
+    if current_bet_counter > PHASE_LENGTH:
+        current_bet_counter = current_bet_counter - PHASE_LENGTH
     
     # FASE BEFORE
     if current_bet_counter in PHASES["PHASE_BEFORE"]:
@@ -229,11 +231,6 @@ def calculate_reward(budget_before_spin, current_bet):
     
     # FASE AFTER
     if current_bet_counter in PHASES["PHASE_AFTER"]:
-        print("FASE AFTER: rimanere nell'intorno di initial_budget_after")
-        win = BEFORE_AFTER_PHASE[current_bet_counter - 40]  # usa la stessa mappa della fase before, ma con indice corretto (1-20)
-        # es. arrivi alla bet 40, l'ultima during, clicchi su spin, counter diventa 41, viene chiamata calculate_reward dell'ultima bet di during, 
-        # calcolo la reward sia se vinco sia se perdo, è nel momento del show final result che h ciò che voglio
-        initial_budget_after = window.get_current_coins()  # prendo il budget iniziale della fase after, che è il budget attuale al momento dell'ingresso nella fase after
         pass
 
 

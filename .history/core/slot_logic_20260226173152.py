@@ -1,15 +1,9 @@
 import random
 #importiamo l'oggetto creato nel main.py window per accedere alle funzioni getters
 from main import window
-from gui.main_window import INITIAL_BUDGET, TOTAL_SESSION_BETS, PHASE_LENGTH
+from gui.main_window import INITIAL_BUDGET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH
 
 # CONSTANTS
-PHASES = {
-    "PHASE_BEFORE": range(1, PHASE_LENGTH + 1),
-    "PHASE_DURING": range(PHASE_LENGTH + 1, 2 * PHASE_LENGTH + 1),
-    "PHASE_AFTER": range(2 * PHASE_LENGTH + 1, TOTAL_SESSION_BETS + 1),
-}
-
 # List of symbols
 SYMBOLS = ["banana", "bar", "bell", "cherry", "diamond", "grape", "lemon", "seven", "star"]
 
@@ -24,23 +18,9 @@ VALID_CONDITIONS = {
 win_percentage = 0.2  #TODO mantenuta solamente per far funzionare, dovrò cambiare tutto!
 
 # Fixed parameters
-# valori percentuali attesi: salvo l'indice di vittoria e il valore
-EXPECTED_PERCENTAGE_INCRESES = {
-    21: 0.025,
-    23: 0.025,
-    24: 0.08,
-    26: 0.005,
-    27: 0.05,
-    29: 0.05,
-    32: 0.025,
-    33: 0.05,
-    35: 0.15,
-    37: 0.04,
-    38: 0.075,
-    39: 0.075,
-    40: 0.15
-}
-EXPECTED_PERCENTAGE_DECREASES = {25: 0.05, 30: 0.15, 35: 0.15}
+INCREMENTI_PERCENTUALE_ATTESI = []
+DECREMENTI_PERCENTUALE_ATTESI = []
+RESULT_DECISIONS = [] #lista di esiti prestabiliti: ogni puntata si sa già se vinto/perso
 
 REWARD_TABLE = {
     "seven": {"3": 150, "2": 12},
@@ -82,107 +62,107 @@ REWARD_TABLE_MUL = {
 # Goal: player stays roughly flat around their current budget.
 # Wins and losses are balanced so net result ≈ 0 over the 20 bets.
 BEFORE_AFTER_PHASE = {
-    1:  False,  # loss
-    2:  False,  # loss
-    3:  False,  # loss
-    4:  True,   # win
-    5:  False,  # loss
-    6:  False,  # loss
-    7:  True,   # win
-    8:  False,  # loss
-    9:  False,  # loss
-    10: False,  # loss
-    11: False,  # loss
-    12: True,   # win
-    13: False,  # loss
-    14: False,  # loss
-    15: True,   # win
-    16: True,   # win
-    17: False,  # loss
-    18: False,  # loss
-    19: False,  # loss
-    20: True,   # win
+    1:  0,  # loss
+    2:  0,  # loss
+    3:  0,  # loss
+    4:  1,  # win
+    5:  0,  # loss
+    6:  0,  # loss
+    7:  1,  # win
+    8:  0,  # loss
+    9:  0,  # loss
+    10: 0,  # loss
+    11: 0,  # loss
+    12: 1,  # win
+    13: 0,  # loss
+    14: 0,  # loss
+    15: 1,  # win
+    16: 1,  # win
+    17: 0,  # loss
+    18: 0,  # loss
+    19: 0,  # loss
+    20: 1,  # win
     # 6 wins, 14 losses
 }
 
+#TODO DURING: ANCORA DA AGGIORNARE CON I VALORI CORRETTI
 # DURING_PHASE_EQUAL: player stays roughly flat around 100 coins during bets 21–40.
 # Same win/loss balance as BEFORE_AFTER_PHASE to keep budget stable.
 DURING_PHASE_EQUAL = {
-    21: False,
-    22: False,
-    23: False,
-    24: True,
-    25: False,
-    26: False,
-    27: True,
-    28: False,
-    29: False,
-    30: False,
-    31: False,
-    32: True,
-    33: False,
-    34: False,
-    35: True,
-    36: True,
-    37: False,
-    38: False,
-    39: False,
-    40: True,
+    21: 0,
+    22: 0,
+    23: 0,
+    24: 1,
+    25: 0,
+    26: 0,
+    27: 1,
+    28: 0,
+    29: 0,
+    30: 0,
+    31: 0,
+    32: 1,
+    33: 0,
+    34: 0,
+    35: 1,
+    36: 1,
+    37: 0,
+    38: 0,
+    39: 0,
+    40: 1,
     # 6 wins, 14 losses → net ≈ 0 (flat)
 }
 
 # DURING_PHASE_WIN: player wins significantly more during bets 21–40.
 # More wins than losses → budget trends upward.
 DURING_PHASE_WIN = {
-    21: True,
-    22: False,
-    23: True,
-    24: True,
-    25: False,
-    26: True,
-    27: True,
-    28: False,
-    29: True,
-    30: False,
-    31: False,
-    32: True,
-    33: True,
-    34: True,
-    35: True,
-    36: True,
-    37: True,
-    38: True,
-    39: True,
-    40: True,
-    # 16 wins, 4 losses → net positive (upward trend)
+    21: 1,
+    22: 1,
+    23: 0,
+    24: 1,
+    25: 1,
+    26: 1,
+    27: 0,
+    28: 1,
+    29: 1,
+    30: 0,
+    31: 1,
+    32: 1,
+    33: 1,
+    34: 0,
+    35: 1,
+    36: 1,
+    37: 0,
+    38: 1,
+    39: 1,
+    40: 1,
+    # 15 wins, 5 losses → net positive (upward trend)
 }
 
 # DURING_PHASE_LOSE: player loses significantly more during bets 21–40.
 # More losses than wins → budget trends downward.
 DURING_PHASE_LOSE = {
-    21: False,
-    22: False,
-    23: False,
-    24: False,
-    25: True,
-    26: False,
-    27: False,
-    28: False,
-    29: False,
-    30: True,
-    31: False,
-    32: False,
-    33: False,
-    34: False,
-    35: True,
-    36: False,
-    37: False,
-    38: False,
-    39: False,
-    40: False,
-    # 3 wins, 17 losses → net negative (downward trend)
+    21: 0,
+    22: 0,
+    23: 1,
+    24: 0,
+    25: 0,
+    26: 0,
+    27: 1,
+    28: 0,
+    29: 0,
+    30: 1,
+    31: 0,
+    32: 0,
+    33: 0,
+    34: 1,
+    35: 0,
+    36: 0,
+    37: 1,
+    38: 0,
+    39: 0,
+    40: 0,
+    # 5 wins, 15 losses → net negative (downward trend)
 }
-
 
 def update_condition(input_condition: str) -> None:
     global condition
@@ -190,66 +170,16 @@ def update_condition(input_condition: str) -> None:
         
 
 #TODO modificare l'intera logica di reward, ora la slot è truccata!
-def calculate_reward(budget_before_spin, current_bet):
-    ''' 
-        Ogni volta che entriamo nella fase
-        - calcolo il budget_iniziale della fase e lo salvo in una variabile globale: initial_budget_before, initial_budget_during, initial_budget_after
-        - verifico se la bet corrisponde ad una vincita/perdita di quella fase
-        - - se vittoria: calcolo la formula per determinare la reward (sarà poi opera di spin_reels ad usarla per capire il simbolo e i moltiplicatori)
-        - - altrimenti: pass
-    '''
-    global initial_budget_before, initial_budget_during, initial_budget_after
-    # in che fase siamo?
-    current_bet_counter = window.get_current_bet_counter()  # ottieni il numero della puntata corrente (1-based)
-    # da 1-20 -> PHASE_BEFORE, da 21-40 -> PHASE_DURING, da 41-60 -> PHASE_AFTER
-    
-    # FASE BEFORE
-    if current_bet_counter in PHASES["PHASE_BEFORE"]:
-        print("FASE BEFORE: rimanere nell'intorno di INITIAL_BUDGET")
-        win = BEFORE_AFTER_PHASE[current_bet_counter]
-        initial_budget_before = INITIAL_BUDGET
-        if win:
-            # calcolo reward di questa fase: vince tutto ciò che ha perso fino ad ora
-            reward = initial_budget_before - budget_before_spin + current_bet
-            return reward
-        else: 
-            return 0
+def calculate_reward(initial_budget, budget_win, current_bet):
+    ''' VITTORIA (reward) = BUDGET_INIZIALE (initial_budget) - BUDGET_WIN (prima dello spin) + PUNTATA (current_bet)
+     BUDGET_CORRENTE (current_bet) = BUDGET_WIN (prima dello spin) - PUNTATA 
+     BUDGET_WIN = BUDGET_CORRENTE + PUNTATA'''
+    return initial_budget - budget_win + current_bet
 
-    # FASE DURING
-    if current_bet_counter in PHASES["PHASE_DURING"]:
-        if condition == "EQUAL":
-            outcome = DURING_PHASE_EQUAL[current_bet_counter]
-        elif condition == "WIN":
-            outcome = DURING_PHASE_WIN[current_bet_counter]
-        elif condition == "LOSE":
-            outcome = DURING_PHASE_LOSE[current_bet_counter]
-        else:
-            raise ValueError(f"Invalid condition: {condition}")
-    
-    
-    # FASE AFTER
-    if current_bet_counter in PHASES["PHASE_AFTER"]:
-        print("FASE AFTER: rimanere nell'intorno di initial_budget_after")
-        win = BEFORE_AFTER_PHASE[current_bet_counter - 40]  # usa la stessa mappa della fase before, ma con indice corretto (1-20)
-        # es. arrivi alla bet 40, l'ultima during, clicchi su spin, counter diventa 41, viene chiamata calculate_reward dell'ultima bet di during, 
-        # calcolo la reward sia se vinco sia se perdo, è nel momento del show final result che h ciò che voglio
-        initial_budget_after = window.get_current_coins()  # prendo il budget iniziale della fase after, che è il budget attuale al momento dell'ingresso nella fase after
-        pass
-
-
-def spin_reels(reward):
+def spin_reels():
     # devo ottenere in output una tupla di 3 simboli es. return ("lemon", "lemon", "grape")
     # introduciamo la nuova logica: ora la tupla restituita cambia in base alle fasi
-    # si può calcolare solo dopo aver calcolato la REWARD, tramite cui calcolare il moltiplicatore e 
-    # tramite il moltiplicatore risalire alla combinazione di simboli da mostrare allo user
-    if reward == 0:
-        # LOSS: prendi simboli diversi a caso dalla lista SYMBOLS
-        symbols = random.sample(SYMBOLS, 3) # prendo 3 simboli diversi dalla lista SYMBOLS
-        return tuple(symbols)
-    
-    if reward > 0:   
-        # WIN: determina il simbolo e i moltiplicatori in base al reward
-        pass
+    pass
 
 
 #TODO: MODIFICARE TUTTO QUANTO CON LOGICA PREDEFINITA DI VITTORIA, NO VALORI ATTESI

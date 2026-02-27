@@ -306,7 +306,7 @@ class MainWindow(QWidget):
         self.bet_counter += 1
         
         # deduct bet from coins (we'll log result after reward is applied)
-        budget_before_spin = self.coins #la salviamo e usiamo dopo solo per mostrare in calculate_reward l'equazione completa come nell'excell
+        budget_before_spin = self.coins
         self.coins -= self.current_bet
         self.update_coin_label()
         

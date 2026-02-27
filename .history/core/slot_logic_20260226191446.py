@@ -82,107 +82,106 @@ REWARD_TABLE_MUL = {
 # Goal: player stays roughly flat around their current budget.
 # Wins and losses are balanced so net result ≈ 0 over the 20 bets.
 BEFORE_AFTER_PHASE = {
-    1:  False,  # loss
-    2:  False,  # loss
-    3:  False,  # loss
-    4:  True,   # win
-    5:  False,  # loss
-    6:  False,  # loss
-    7:  True,   # win
-    8:  False,  # loss
-    9:  False,  # loss
-    10: False,  # loss
-    11: False,  # loss
-    12: True,   # win
-    13: False,  # loss
-    14: False,  # loss
-    15: True,   # win
-    16: True,   # win
-    17: False,  # loss
-    18: False,  # loss
-    19: False,  # loss
-    20: True,   # win
+    1:  0,  # loss
+    2:  0,  # loss
+    3:  0,  # loss
+    4:  1,  # win
+    5:  0,  # loss
+    6:  0,  # loss
+    7:  1,  # win
+    8:  0,  # loss
+    9:  0,  # loss
+    10: 0,  # loss
+    11: 0,  # loss
+    12: 1,  # win
+    13: 0,  # loss
+    14: 0,  # loss
+    15: 1,  # win
+    16: 1,  # win
+    17: 0,  # loss
+    18: 0,  # loss
+    19: 0,  # loss
+    20: 1,  # win
     # 6 wins, 14 losses
 }
 
 # DURING_PHASE_EQUAL: player stays roughly flat around 100 coins during bets 21–40.
 # Same win/loss balance as BEFORE_AFTER_PHASE to keep budget stable.
 DURING_PHASE_EQUAL = {
-    21: False,
-    22: False,
-    23: False,
-    24: True,
-    25: False,
-    26: False,
-    27: True,
-    28: False,
-    29: False,
-    30: False,
-    31: False,
-    32: True,
-    33: False,
-    34: False,
-    35: True,
-    36: True,
-    37: False,
-    38: False,
-    39: False,
-    40: True,
+    21: 0,
+    22: 0,
+    23: 0,
+    24: 1,
+    25: 0,
+    26: 0,
+    27: 1,
+    28: 0,
+    29: 0,
+    30: 0,
+    31: 0,
+    32: 1,
+    33: 0,
+    34: 0,
+    35: 1,
+    36: 1,
+    37: 0,
+    38: 0,
+    39: 0,
+    40: 1,
     # 6 wins, 14 losses → net ≈ 0 (flat)
 }
 
 # DURING_PHASE_WIN: player wins significantly more during bets 21–40.
 # More wins than losses → budget trends upward.
 DURING_PHASE_WIN = {
-    21: True,
-    22: False,
-    23: True,
-    24: True,
-    25: False,
-    26: True,
-    27: True,
-    28: False,
-    29: True,
-    30: False,
-    31: False,
-    32: True,
-    33: True,
-    34: True,
-    35: True,
-    36: True,
-    37: True,
-    38: True,
-    39: True,
-    40: True,
+    21: 1,
+    22: 0,
+    23: 1,
+    24: 1,
+    25: 0,
+    26: 1,
+    27: 1,
+    28: 0,
+    29: 1,
+    30: 0,
+    31: 0,
+    32: 1,
+    33: 1,
+    34: 1,
+    35: 1,
+    36: 1,
+    37: 1,
+    38: 1,
+    39: 1,
+    40: 1,
     # 16 wins, 4 losses → net positive (upward trend)
 }
 
 # DURING_PHASE_LOSE: player loses significantly more during bets 21–40.
 # More losses than wins → budget trends downward.
 DURING_PHASE_LOSE = {
-    21: False,
-    22: False,
-    23: False,
-    24: False,
-    25: True,
-    26: False,
-    27: False,
-    28: False,
-    29: False,
-    30: True,
-    31: False,
-    32: False,
-    33: False,
-    34: False,
-    35: True,
-    36: False,
-    37: False,
-    38: False,
-    39: False,
-    40: False,
-    # 3 wins, 17 losses → net negative (downward trend)
+    21: 0,
+    22: 0,
+    23: 0,
+    24: 0,
+    25: 1,
+    26: 0,
+    27: 0,
+    28: 0,
+    29: 0,
+    30: 1,
+    31: 0,
+    32: 0,
+    33: 0,
+    34: 0,
+    35: 1,
+    36: 0,
+    37: 0,
+    38: 0,
+    39: 0,
+    40: 0,
+    # 5 wins, 15 losses → net negative (downward trend)
 }
-
 
 def update_condition(input_condition: str) -> None:
     global condition
@@ -192,29 +191,36 @@ def update_condition(input_condition: str) -> None:
 #TODO modificare l'intera logica di reward, ora la slot è truccata!
 def calculate_reward(budget_before_spin, current_bet):
     ''' 
-        Ogni volta che entriamo nella fase
-        - calcolo il budget_iniziale della fase e lo salvo in una variabile globale: initial_budget_before, initial_budget_during, initial_budget_after
-        - verifico se la bet corrisponde ad una vincita/perdita di quella fase
-        - - se vittoria: calcolo la formula per determinare la reward (sarà poi opera di spin_reels ad usarla per capire il simbolo e i moltiplicatori)
-        - - altrimenti: pass
+        BEFORE PHASE (BETS 1–20) EQUAL TO AFTER PHASE (BETS 41–60): player should stay roughly flat around 100 coins.
+        REWARD (CALCULATE_REWARD)
+        Objective
+        Stay around the initial_budget of this phase.
+            • Outcomes predefined by BEFORE_AFTER_PHASE
+            • Initial_budget = 100
+        Win Logic
+        When a win occurs (as defined by the map):
+            • The player wins back everything lost up to that point, including the current bet.
+        Example:
+            • After 3 bets, total loss = €2
+            • On the 4th bet, user bets €0.80
+            • Total win = 2.80
+                ○ (100 – 98) + 0.80 = 2.8
+        Budget Update Logic
+        When clicking PLAY:
+            • The bet amount is immediately deducted from current_coin.
+        When showing final result:
+            • WIN (reward) = INITIAL_BUDGET – BUDGET_BEFORE_SPIN + BET
+            • CURRENT_BUDGET = BUDGET_BEFORE_SPIN – BET
+            • UPDATED_BUDGET = CURRENT_BUDGET + BET
     '''
-    global initial_budget_before, initial_budget_during, initial_budget_after
+     
     # in che fase siamo?
     current_bet_counter = window.get_current_bet_counter()  # ottieni il numero della puntata corrente (1-based)
-    # da 1-20 -> PHASE_BEFORE, da 21-40 -> PHASE_DURING, da 41-60 -> PHASE_AFTER
-    
-    # FASE BEFORE
-    if current_bet_counter in PHASES["PHASE_BEFORE"]:
-        print("FASE BEFORE: rimanere nell'intorno di INITIAL_BUDGET")
-        win = BEFORE_AFTER_PHASE[current_bet_counter]
-        initial_budget_before = INITIAL_BUDGET
-        if win:
-            # calcolo reward di questa fase: vince tutto ciò che ha perso fino ad ora
-            reward = initial_budget_before - budget_before_spin + current_bet
-            return reward
-        else: 
-            return 0
-
+    # se arrivo a 41, è after quindi per usare 1 sola mappa, lo clampo a 21
+    if current_bet_counter in PHASES["PHASE_AFTER"]:
+        current_bet_counter = current_bet_counter - PHASE_LENGTH  # per la fase AFTER, ricalcola l'indice come se fosse la seconda fase (21-40)
+    phase_initial_budget = INITIAL_BUDGET
+    final_during_budget = None
     # FASE DURING
     if current_bet_counter in PHASES["PHASE_DURING"]:
         if condition == "EQUAL":
@@ -225,31 +231,22 @@ def calculate_reward(budget_before_spin, current_bet):
             outcome = DURING_PHASE_LOSE[current_bet_counter]
         else:
             raise ValueError(f"Invalid condition: {condition}")
+    else: 
+        if current_bet_counter in PHASES["PHASE_AFTER"]:
+            phase_initial_budget = final_during_budget  # il budget iniziale della fase AFTER è il budget finale della fase DURING
+        # Fase BEFORE o AFTER: usa la mappa fissa per determinare se è WIN o LOSS
+        outcome = BEFORE_AFTER_PHASE[current_bet_counter]
+     
     
-    
-    # FASE AFTER
-    if current_bet_counter in PHASES["PHASE_AFTER"]:
-        print("FASE AFTER: rimanere nell'intorno di initial_budget_after")
-        win = BEFORE_AFTER_PHASE[current_bet_counter - 40]  # usa la stessa mappa della fase before, ma con indice corretto (1-20)
-        # es. arrivi alla bet 40, l'ultima during, clicchi su spin, counter diventa 41, viene chiamata calculate_reward dell'ultima bet di during, 
-        # calcolo la reward sia se vinco sia se perdo, è nel momento del show final result che h ciò che voglio
-        initial_budget_after = window.get_current_coins()  # prendo il budget iniziale della fase after, che è il budget attuale al momento dell'ingresso nella fase after
-        pass
-
+    #return initial_budget - budget_before_spin + current_bet
 
 def spin_reels(reward):
     # devo ottenere in output una tupla di 3 simboli es. return ("lemon", "lemon", "grape")
     # introduciamo la nuova logica: ora la tupla restituita cambia in base alle fasi
     # si può calcolare solo dopo aver calcolato la REWARD, tramite cui calcolare il moltiplicatore e 
     # tramite il moltiplicatore risalire alla combinazione di simboli da mostrare allo user
-    if reward == 0:
-        # LOSS: prendi simboli diversi a caso dalla lista SYMBOLS
-        symbols = random.sample(SYMBOLS, 3) # prendo 3 simboli diversi dalla lista SYMBOLS
-        return tuple(symbols)
-    
-    if reward > 0:   
-        # WIN: determina il simbolo e i moltiplicatori in base al reward
-        pass
+
+    pass
 
 
 #TODO: MODIFICARE TUTTO QUANTO CON LOGICA PREDEFINITA DI VITTORIA, NO VALORI ATTESI
