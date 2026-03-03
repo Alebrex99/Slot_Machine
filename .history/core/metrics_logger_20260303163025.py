@@ -72,6 +72,7 @@ class MetricsLogger:
         """Logs the SESSION_END event. Always executed regardless of metrics_enabled."""
         self._log(event_type="SESSION_END")
 
+    #TODO: valutare il bet_number, viene calcolato in modo incrementale ogni volta che l'utente preme il pulsante di spin, quindi è un contatore che parte da 1 e incrementa di 1 ad ogni spin, fino a 60. 
     # OLD: BET e RESULT erano separati in due eventi diversi
     # NEW: BET e RESULT sono accorpati: il salvataggio unico avviene nel momento in cui il risultato compare allo user
     def log_bet(self, bet_number: int, bet: float, result_gain: float, current_coin: float) -> None:

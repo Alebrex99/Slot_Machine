@@ -476,17 +476,16 @@ class MainWindow(QWidget):
             self.close() 
                        
 
-    def testing_statistics(self) -> None:
+    def testing_statistics(self, researcher) -> None:
         """Simula una sessione completa di TOTAL_SESSION_BETS puntate consecutive in TEST MODE.
 
         Chiamata da main.py quando researcher.test_mode è True, subito dopo window.show()
         e prima che app.exec_() venga avviato.
 
         Comportamento:
-        - Resetta lo stato della sessione (coins=INITIAL_BUDGET, bet_counter=0).
-        - enable_metrics è già chiamato da RemoteResearcher.start_metrics() prima di questa.
-        - Esegue esattamente TOTAL_SESSION_BETS spin sincroni via _execute_spin_logic(),
-          ciascuno con una puntata casuale tra MIN_BET e MAX_BET (step BET_STEP).
+        - Resetta lo stato della sessione (coins=INITIAL_BUDGET, bet_counter=0, bet=MIN_BET).
+        - Abilita le metriche con la condition corrente del ricercatore (default: EQUAL in TEST).
+        - Esegue esattamente TOTAL_SESSION_BETS spin sincroni via _execute_spin_logic().
         - All'ultima puntata (bet_counter == TOTAL_SESSION_BETS) _execute_spin_logic chiama
           self.close() → closeEvent → SESSION_END loggato automaticamente.
 
@@ -495,26 +494,32 @@ class MainWindow(QWidget):
         come avverrebbe in una sessione reale dell'utente.
 
         Al riavvio dell'app una nuova sessione viene appesa al CSV esistente.
+
+        Args:
+            researcher: Istanza di RemoteResearcher. Fornisce la condition corrente via
+                        get_current_condition(). Non viene utilizzato per alterare la logica
+                        di spin (responsabilità di slot_logic.py).
         """
         # Inizializza stato sessione come in una vera partita
         self.coins = INITIAL_BUDGET
         self.bet_counter = 0
-        self.current_bet = MIN_BET  # valore iniziale; verrà sovrascritto ad ogni iterazione del loop
+        self.current_bet = MIN_BET  # puntata minima fissa per il test
 
-        # Reset phase-global budget variables in slot_logic before each TEST session.
-        # Without this, a second TEST run would use stale initial_budget_X from the previous session.
+        # FIX: reset phase-global budget variables in slot_logic before each TEST session.
+        # Without this, a second TEST run (or any run after the first) would use stale
+        # initial_budget_before/during/after values from the previous session.
         import core.slot_logic as _sl
         _sl.initial_budget_before = None
         _sl.initial_budget_during = None
         _sl.initial_budget_after  = None
 
-        # enable_metrics already called by RemoteResearcher.start_metrics() — no need to repeat here.
+        # Abilita metriche: usa la condition impostata dal ricercatore (EQUAL di default in TEST)
+        self._metrics.enable_metrics(researcher.get_current_condition())
+
         self.update_coin_label()
         self.update_bet_display()
 
-        # Simula esattamente 60 puntate consecutive, ciascuna con puntata casuale [MIN_BET, MAX_BET].
+        # Simula esattamente 60 puntate consecutive.
         # Al termine dell'ultima, _execute_spin_logic chiama self.close() → SESSION_END.
         for _ in range(TOTAL_SESSION_BETS):
-            # Random bet from MIN_BET to MAX_BET (inclusive) in BET_STEP increments: poichè random crea seq interi, prima la creo sulle decine, poi divido per 10
-            self.current_bet = random.choice(range(int(MIN_BET*10), int(MAX_BET*10)+1, int(BET_STEP*10))) / 10.0
             self._execute_spin_logic()

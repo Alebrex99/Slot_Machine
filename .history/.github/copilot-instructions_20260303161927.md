@@ -189,7 +189,7 @@ TIMESTAMP | EVENT | BET_NUMBER | BET | CONDITION | RESULT | COIN | MESSAGE
 ```
 
 - Event types: `SESSION_START`, `START_METRICS`, `BET`, `MEX`, `SESSION_END`.
-- `log_bet(bet_number, bet, result_gain, current_coin)` — no `condition` arg; the CONDITION column is not logged on BET rows.
+- `log_bet(bet_number, bet, result_gain, current_coin)` — `condition` is injected internally from `self._current_condition` set at `enable_metrics` time; do **not** pass it as an argument from callers.
 - `result_gain` = `+reward` on win, `-bet` on loss.
 - CSV is append-only; new sessions are appended after the previous `SESSION_END`.
 

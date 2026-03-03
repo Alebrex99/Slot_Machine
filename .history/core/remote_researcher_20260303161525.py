@@ -1,5 +1,4 @@
-# FIX: removed 'from core import metrics_logger' — the module was never used directly
-# and the bare import shadows the constructor parameter of the same name, causing confusion.
+from core import metrics_logger
 from core.slot_logic import VALID_CONDITIONS, update_condition
 
 class RemoteResearcher:
@@ -72,11 +71,12 @@ class RemoteResearcher:
     def start_metrics(self) -> None:
         """Log SESSION_START e abilita le metriche con la condition corrente.
 
-        Sempre eseguito, indipendentemente da test_mode.
-        L'ordine CSV risultante è: SESSION_START → START_METRICS → BET×60 → SESSION_END.
+        In TEST_MODE usa il primo valore di CONVERTING_TABLE come placeholder;
+        testing_statistics sovrascriverà expected_value spin per spin.
         """
         self._metrics_logger.log_session_start()
-        self._metrics_logger.enable_metrics(condition=self._current_condition)
+        if not self._test_mode:
+            self._metrics_logger.enable_metrics(condition=self._current_condition)
 
 
     # ------------------------------------------------------------------

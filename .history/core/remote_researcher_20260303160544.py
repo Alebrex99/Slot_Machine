@@ -1,5 +1,4 @@
-# FIX: removed 'from core import metrics_logger' — the module was never used directly
-# and the bare import shadows the constructor parameter of the same name, causing confusion.
+from core import metrics_logger
 from core.slot_logic import VALID_CONDITIONS, update_condition
 
 class RemoteResearcher:
@@ -31,32 +30,14 @@ class RemoteResearcher:
     def set_input_data(self) -> None:
         """Raccoglie i parametri iniziali dal ricercatore via terminale.
 
-        Inserire 'TEST + CONDITION' come dato per attivare la modalità di test automatico.
+        Inserire 'TEST' come dato per attivare la modalità di test automatico.
         """
         self._input_data = input("Insert CONDITION (or 'TEST + CONDITION' for automated test): ").strip()
-        
-        # TEST + CONDITION
-        # l'utente può inserire "TEST EQUAL / E" o "TEST WIN / W" o "TEST LOSE / L" per attivare la modalità di test automatico con la condition desiderata
-        # lettura dell'intera stringa inserita
-        if self._input_data.upper().startswith("TEST "):
-            parts = self._input_data.upper().split() # es. "TEST EQUAL" -> ["TEST", "EQUAL"]
-            if len(parts) != 2:
-                print("[RemoteResearcher] Formato input non valido per TEST_MODE. Usa 'TEST + CONDITION' (es. 'TEST EQUAL').")
-                self.set_input_data()  # richiede input finché non valido
-                return
-            
-            condition_part = parts[1]
-            if condition_part not in VALID_CONDITIONS and condition_part not in VALID_CONDITIONS.values():
-                print(f"[RemoteResearcher] condition '{condition_part}' non valida. Valori consentiti: {VALID_CONDITIONS}")
-                self.set_input_data()  # richiede input finché non valido
-                return
-            
+        # puoi darlo sia maiuscolo che minuscolo, sarà convertito nella logica
+        if self._input_data.upper() == "TEST":
             self._test_mode = True
-            self.set_condition(condition_part)  # imposta la condition specificata dopo "TEST"
-            print(f"[RemoteResearcher] TEST_MODE abilitato con CONDITION={self._current_condition}.")
-            input("Press ENTER to start TEST with CONDITION: " + self._current_condition)
-            return
-        
+            print("[RemoteResearcher] TEST_MODE abilitato.")
+            return 
         
         if self._input_data.upper() not in VALID_CONDITIONS and self._input_data.upper() not in VALID_CONDITIONS.values():
             print(f"[RemoteResearcher] condition '{self._input_data}' non valida. Valori consentiti: {VALID_CONDITIONS}")
@@ -72,11 +53,12 @@ class RemoteResearcher:
     def start_metrics(self) -> None:
         """Log SESSION_START e abilita le metriche con la condition corrente.
 
-        Sempre eseguito, indipendentemente da test_mode.
-        L'ordine CSV risultante è: SESSION_START → START_METRICS → BET×60 → SESSION_END.
+        In TEST_MODE usa il primo valore di CONVERTING_TABLE come placeholder;
+        testing_statistics sovrascriverà expected_value spin per spin.
         """
         self._metrics_logger.log_session_start()
-        self._metrics_logger.enable_metrics(condition=self._current_condition)
+        if not self._test_mode:
+            self._metrics_logger.enable_metrics(condition=self._current_condition)
 
 
     # ------------------------------------------------------------------

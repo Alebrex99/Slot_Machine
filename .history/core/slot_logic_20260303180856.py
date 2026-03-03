@@ -273,15 +273,11 @@ def loss_recover(initial_budget_phase, budget_before_spin, current_bet_counter, 
     la reward recupera esattamente la perdita cumulata dalla fase + la bet corrente.
     """
     # diversamente dall'excell: bisogna ritornare la reward effettiva (e visualizzata)
-    # ovvero il valore totale inclusa la bet (che ho già tolto dai coins non appena si clicca spin) 
-    if initial_budget_phase - budget_before_spin < 0:
-        difference = 0
-    else:
-        difference = initial_budget_phase - budget_before_spin
-    expected_reward = round(difference + current_bet, 2)
+    # ovvero il valore totale inclusa la bet (che ho già tolto dai coins non appena si clicca spin)    
+    expected_reward = round(initial_budget_phase - budget_before_spin + current_bet, 2)
     multiplier = calculate_multiplier(expected_reward, current_bet)
     reward = round(current_bet * multiplier, 2)
-    print(f"VITTORIA! Bet n° {current_bet_counter}, expected_reward: {expected_reward}, moltiplicatore: {multiplier}x, gain reale: {reward - current_bet}, reward: {reward}")
+    print(f"VITTORIA! Bet n° {current_bet_counter}, expected_reward: {expected_reward}, moltiplicatore: {multiplier}x, reward: {reward}")
     return reward, multiplier
 
 # PER DURING_WIN
@@ -292,7 +288,7 @@ def win_increase(current_bet_counter, current_bet):
     expected_reward = round(expected_percentage_increase * initial_budget_during + current_bet, 2)
     multiplier = calculate_multiplier(expected_reward, current_bet)
     reward = round(current_bet * multiplier, 2)
-    print(f"VITTORIA! Bet n° {current_bet_counter}, expected_reward: {expected_reward}, expected_%_WIN: {expected_percentage_increase}, moltiplicatore: {multiplier}x, gain reale: {reward - current_bet}, reward: {reward}")
+    print(f"VITTORIA! Bet n° {current_bet_counter}, expected_reward: {expected_reward}, expected_%_WIN: {expected_percentage_increase}, moltiplicatore: {multiplier}x, reward: {reward}")
     return reward, multiplier
 
 # PER DURING_LOSE
@@ -312,16 +308,16 @@ def lose_increase(budget_before_spin, current_bet_counter, current_bet):
     if lose_difference > 0: # lose_value > expected_lose_value
         multiplier = calculate_multiplier(lose_difference, current_bet)
         reward = round(current_bet * multiplier, 2)
-        print(f"CHECKPOINT CONTENTINO! Bet n° {current_bet_counter},  lose_value: {lose_value}, expected_lose_value: {expected_lose_value}, lose_difference: {lose_difference}, multiplier: {multiplier}x, gain reale: {reward - current_bet}, reward: {reward}")
+        print(f"CHECKPOINT WIN CONTENTINO! Bet n° {current_bet_counter}, lose_difference: {lose_difference}, current_bet: {current_bet}, expected_lose_value: {expected_lose_value}, lose_value: {lose_value}, reward: {reward}")
         return reward, multiplier
     # altrimenti non hai perso abbastanza
     else: # lose_value < expected_lose_value
         multiplier = 1 # il minimo per dare una ricompensa più piccola possibile al checkpoint
         reward = round(current_bet * multiplier, 2)
-        print(f"CHECKPOINT MINIMO! Bet n° {current_bet_counter},  lose_value: {lose_value}, expected_lose_value: {expected_lose_value}, lose_difference: {lose_difference}, multiplier: {multiplier}x, gain reale: {reward - current_bet}, reward: {reward}")
+        print(f"CHECKPOINT WIN MINIMO! Bet n° {current_bet_counter} (moltiplicatore: {multiplier}x) -> lose_difference: {lose_difference}, current_bet: {current_bet}, expected_lose_value: {expected_lose_value}, lose_value: {lose_value}, reward: {reward}")
         return reward, multiplier
 
-# TODO: controllare dal excell perchè, per il calcolo reward si faccia: IF (multiplier*bet)<0 -> 0 , ELSE (multiplier*bet)
+
 def calculate_multiplier(expected_reward, current_bet):
     ideal_multiplier = round(expected_reward / current_bet, 0) 
     # NOTE per WIN e LOSE: se non trovo gli expected_percentage-> WIN: expected_reward = current_bet -> multplier = 1 ; LOSE: non avviene mai

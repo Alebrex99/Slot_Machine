@@ -299,12 +299,9 @@ class MainWindow(QWidget):
         self.bet_counter += 1 # bet n 15: dopo l'incremento siamo alla bet corrente
         
         # è molto importante che quando l'app si chiude, alla successiva sessione le metriche vengano appese nel file
-        # REVIEW NOTE: check moved to show_final_result AFTER bet 60 is fully processed and logged.
-        # The old check here (> TOTAL_SESSION_BETS) would require a 61st press to trigger close,
-        # leaving bet 60 processed but close only triggered on the next (61st) click.
-        # if self.bet_counter > TOTAL_SESSION_BETS:
-        #     self.close()
-        #     return
+        if self.bet_counter > TOTAL_SESSION_BETS: #arriviamo alla 61esima giocata, chiudiamo la sessione
+            self.close()
+            return
         
         play_sfx("click.wav")
 
@@ -348,9 +345,7 @@ class MainWindow(QWidget):
         if self.current_frame >= self.roll_frames:
             self.spin_timer.stop()
             self.show_final_result()
-            # Re-enable only if session is not over (bet 60 disables permanently in show_final_result)
-            if self.bet_counter < TOTAL_SESSION_BETS:
-                self.spin_btn.setDisabled(False)
+            self.spin_btn.setDisabled(False)
 
     def show_final_result(self):
         r1, r2, r3 = self.final_result #estraggo i simboli del risultato finale
@@ -359,15 +354,14 @@ class MainWindow(QWidget):
         self.reel2.setPixmap(self.symbols[r2].scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
         self.reel3.setPixmap(self.symbols[r3].scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
 
-        # reward already computed in on_spin via calculate_reward()
+        # Quale è la reward visualizzata all'utente
+        #reward = calculate_reward([r1, r2, r3], self.current_bet)
         reward = self.current_reward
         
         # Fino a questo punto è stato già fatto: coins = coins - bet 
-        # gain_visualizzato (reward) = bet * multiplier
-        # gain_reale = bet * multiplier - bet
-        # quindi facendo coins + reward (gain visualizzato) 
-        # -> coins effettivi post giocata = coins + bet*multiplier - bet
-        # -> coins + gain_reale = (coins - bet) + gain_visualizzato
+        # data poi la reward = bet * multiplier
+        # quindi facendo coins + reward -> coins effettivi post giocata = coins - bet + bet*multiplier 
+        # -> coins - gain_reale / coins - bet + gain_visualizzato
         self.coins += reward
         self.update_coin_label()
         self.validate_bet()
@@ -393,13 +387,6 @@ class MainWindow(QWidget):
             self.watermark.setText(f"Hai vinto +{reward:.2f}")
         else:
             self.watermark.setText("Try again!")
-
-        # FIX: auto-close AFTER bet 60 is fully processed and logged.
-        # Old location (on_spin before processing) required a 61st press.
-        if self.bet_counter >= TOTAL_SESSION_BETS:
-            self.spin_btn.setDisabled(True)
-            QTimer.singleShot(1500, self.close)
-
 
     def redeem_code_callback(self, code: str) -> int:
         coins_to_add = validate_redeem_code(code)
@@ -443,21 +430,18 @@ class MainWindow(QWidget):
 
         Equivale a on_spin() + show_final_result() ma termina immediatamente,
         consentendo l'uso in un loop senza attendere i ~4 secondi di animazione.
-        Mirrors the EXACT same pipeline as the real gameplay path:
-          budget_before_spin → deduct bet → calculate_reward → spin_reels → add reward → log
         """
         if self.current_bet <= 0 or self.current_bet > self.coins:
             return  # puntata non valida: salta lo spin
 
-        # increment bet counter (mirrors on_spin)
+        # increment bet counter
         self.bet_counter += 1
 
-        # CORRECT: same pipeline as on_spin + show_final_result
-        budget_before_spin = self.coins                                                     # snapshot before deduction
-        self.coins -= self.current_bet                                                      # deduct bet
-        reward, multiplier = calculate_reward(budget_before_spin, self.bet_counter, self.current_bet)  # deterministic reward
-        r1, r2, r3 = spin_reels(reward, multiplier)                                        # symbol selection from reward
-        self.coins += reward                                                                # apply reward
+        # deduct bet and execute deterministic spin
+        self.coins -= self.current_bet
+        r1, r2, r3 = spin_reels()
+        reward = calculate_reward([r1, r2, r3], self.current_bet)
+        self.coins += reward
 
         # compute result_gain (+reward or -bet)
         result_gain = reward if reward > 0 else -self.current_bet
@@ -476,17 +460,16 @@ class MainWindow(QWidget):
             self.close() 
                        
 
-    def testing_statistics(self) -> None:
+    def testing_statistics(self, researcher) -> None:
         """Simula una sessione completa di TOTAL_SESSION_BETS puntate consecutive in TEST MODE.
 
         Chiamata da main.py quando researcher.test_mode è True, subito dopo window.show()
         e prima che app.exec_() venga avviato.
 
         Comportamento:
-        - Resetta lo stato della sessione (coins=INITIAL_BUDGET, bet_counter=0).
-        - enable_metrics è già chiamato da RemoteResearcher.start_metrics() prima di questa.
-        - Esegue esattamente TOTAL_SESSION_BETS spin sincroni via _execute_spin_logic(),
-          ciascuno con una puntata casuale tra MIN_BET e MAX_BET (step BET_STEP).
+        - Resetta lo stato della sessione (coins=INITIAL_BUDGET, bet_counter=0, bet=MIN_BET).
+        - Abilita le metriche con la condition corrente del ricercatore (default: EQUAL in TEST).
+        - Esegue esattamente TOTAL_SESSION_BETS spin sincroni via _execute_spin_logic().
         - All'ultima puntata (bet_counter == TOTAL_SESSION_BETS) _execute_spin_logic chiama
           self.close() → closeEvent → SESSION_END loggato automaticamente.
 
@@ -495,26 +478,24 @@ class MainWindow(QWidget):
         come avverrebbe in una sessione reale dell'utente.
 
         Al riavvio dell'app una nuova sessione viene appesa al CSV esistente.
+
+        Args:
+            researcher: Istanza di RemoteResearcher. Fornisce la condition corrente via
+                        get_current_condition(). Non viene utilizzato per alterare la logica
+                        di spin (responsabilità di slot_logic.py).
         """
         # Inizializza stato sessione come in una vera partita
         self.coins = INITIAL_BUDGET
         self.bet_counter = 0
-        self.current_bet = MIN_BET  # valore iniziale; verrà sovrascritto ad ogni iterazione del loop
+        self.current_bet = MIN_BET  # puntata minima fissa per il test
 
-        # Reset phase-global budget variables in slot_logic before each TEST session.
-        # Without this, a second TEST run would use stale initial_budget_X from the previous session.
-        import core.slot_logic as _sl
-        _sl.initial_budget_before = None
-        _sl.initial_budget_during = None
-        _sl.initial_budget_after  = None
+        # Abilita metriche: usa la condition impostata dal ricercatore (EQUAL di default in TEST)
+        self._metrics.enable_metrics(researcher.get_current_condition())
 
-        # enable_metrics already called by RemoteResearcher.start_metrics() — no need to repeat here.
         self.update_coin_label()
         self.update_bet_display()
 
-        # Simula esattamente 60 puntate consecutive, ciascuna con puntata casuale [MIN_BET, MAX_BET].
+        # Simula esattamente 60 puntate consecutive.
         # Al termine dell'ultima, _execute_spin_logic chiama self.close() → SESSION_END.
         for _ in range(TOTAL_SESSION_BETS):
-            # Random bet from MIN_BET to MAX_BET (inclusive) in BET_STEP increments: poichè random crea seq interi, prima la creo sulle decine, poi divido per 10
-            self.current_bet = random.choice(range(int(MIN_BET*10), int(MAX_BET*10)+1, int(BET_STEP*10))) / 10.0
             self._execute_spin_logic()

@@ -515,6 +515,6 @@ class MainWindow(QWidget):
         # Simula esattamente 60 puntate consecutive, ciascuna con puntata casuale [MIN_BET, MAX_BET].
         # Al termine dell'ultima, _execute_spin_logic chiama self.close() → SESSION_END.
         for _ in range(TOTAL_SESSION_BETS):
-            # Random bet from MIN_BET to MAX_BET (inclusive) in BET_STEP increments: poichè random crea seq interi, prima la creo sulle decine, poi divido per 10
+            # Random bet from MIN_BET to MAX_BET (inclusive) in BET_STEP increments
             self.current_bet = random.choice(range(int(MIN_BET*10), int(MAX_BET*10)+1, int(BET_STEP*10))) / 10.0
             self._execute_spin_logic()

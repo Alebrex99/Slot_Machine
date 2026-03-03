@@ -72,11 +72,13 @@ class RemoteResearcher:
     def start_metrics(self) -> None:
         """Log SESSION_START e abilita le metriche con la condition corrente.
 
-        Sempre eseguito, indipendentemente da test_mode.
-        L'ordine CSV risultante è: SESSION_START → START_METRICS → BET×60 → SESSION_END.
+        In TEST_MODE non chiama enable_metrics qui: lo fa testing_statistics()
+        subito prima del loop di spin, dopo aver resettato lo stato di sessione.
         """
+        # REVIEW NOTE: old docstring referenced CONVERTING_TABLE (removed). Updated.
         self._metrics_logger.log_session_start()
-        self._metrics_logger.enable_metrics(condition=self._current_condition)
+        if not self._test_mode:
+            self._metrics_logger.enable_metrics(condition=self._current_condition)
 
 
     # ------------------------------------------------------------------
