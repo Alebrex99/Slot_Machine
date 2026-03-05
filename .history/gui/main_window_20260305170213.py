@@ -420,15 +420,11 @@ class MainWindow(QWidget):
         #self.reel2.setPixmap(random.choice(random_symbols).scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
         #self.reel3.setPixmap(random.choice(random_symbols).scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
 
-        # Use the frozen window-derived size captured in on_spin.
-        # Subtract the same REEL_CHROME (26px) used in _update_reels so animated frames
-        # are never clipped by the border/padding chrome.
-        REEL_CHROME = 26
-        inner = max(1, self._anim_size - REEL_CHROME)
+        # Use the frozen window-derived size captured in on_spin
         for reel in (self.reel1, self.reel2, self.reel3):
             reel.setPixmap(
                 random.choice(random_symbols).scaled(
-                    inner, inner, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                    self._anim_size, self._anim_size, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
 

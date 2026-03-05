@@ -54,14 +54,14 @@ class MainWindow(QWidget):
         # Experimental session tracking
         self.bet_counter = 0  # counts from 0 -> increment before each bet to 1..60
         self.current_reward = 0.00
-        self._spinning = False  # True while the spin animation is running
         
-        # OLD: self.spin_cost = 5   (unused, removed)
-        self.symbol_size = 400  #(replaced by dynamic _get_symbol_size())
         self.spin_timer = QTimer()
         self.spin_speed = 80
         self.roll_frames = 50
         self.current_frame = 0
+
+        # OLD: self.spin_cost = 5   (unused, removed)
+        self.symbol_size = 700  #(replaced by dynamic _get_symbol_size())
 
         # NEW: tracks the currently displayed symbol on each reel (needed by resizeEvent to rescale)
         self.reel_symbols = ["seven", "seven", "seven"]
@@ -91,9 +91,7 @@ class MainWindow(QWidget):
         self.bet_display.setObjectName("bet_display")
         self.bet_display.setAlignment(Qt.AlignCenter)
         self.bet_display.setMaximumWidth(300)
-        # BUG1: setMinimumHeight prevents the field from being squished below the QSS font size
-        # (font-size: 50px + padding: 10px → natural height ~70px; floor at 70 avoids text clipping)
-        self.bet_display.setMinimumHeight(70)
+        self.bet_display.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.bet_display.editingFinished.connect(self.on_bet_manual_input)
 
         self.bet_up_btn = QPushButton("▲")
@@ -101,7 +99,7 @@ class MainWindow(QWidget):
         self.bet_up_btn.setAutoRepeatInterval(50) # voglio poter tener pressato il pulsante per aumentare la puntata, quindi uso setAutoRepeat(True) e setAutoRepeatInterval(100) per farlo ripetere ogni 100ms
         self.bet_up_btn.setObjectName("bet_up_btn")
         self.bet_up_btn.setMaximumWidth(300)
-        self.bet_up_btn.setMinimumHeight(40)  
+        self.bet_up_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.bet_up_btn.clicked.connect(self.increase_bet)
         
         self.bet_down_btn = QPushButton("▼")
@@ -109,7 +107,7 @@ class MainWindow(QWidget):
         self.bet_down_btn.setAutoRepeatInterval(50)
         self.bet_down_btn.setObjectName("bet_down_btn")
         self.bet_down_btn.setMaximumWidth(300)
-        self.bet_down_btn.setMinimumHeight(40)
+        self.bet_down_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.bet_down_btn.clicked.connect(self.decrease_bet)
         
         # Coins display (right side)
@@ -117,17 +115,18 @@ class MainWindow(QWidget):
         self.coin_label.setObjectName("coin_label")
         self.coin_label.setMaximumWidth(400)
         self.coin_label.setAlignment(Qt.AlignCenter)
+        self.coin_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.update_coin_label()
 
-        # Tolgo redeem per esperimenti
-        #self.redeem_btn = QPushButton("Redeem Coin")
-        #self.redeem_btn.setObjectName("redeem_btn")
-        #self.redeem_btn.setMaximumWidth(400) 
-        #self.coin_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        #self.redeem_btn.clicked.connect(self.on_redeem) # per esperimenti user non può usare redeem, quindi commento il collegamento al dialog
+        self.redeem_btn = QPushButton("Redeem Coin")
+        self.redeem_btn.setObjectName("redeem_btn")
+        self.redeem_btn.setMaximumWidth(400) 
+        self.coin_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.redeem_btn.clicked.connect(self.on_redeem)
 
         self.watermark = QLabel("UPV Slot Machine")
         self.watermark.setAlignment(Qt.AlignCenter)
+        self.watermark.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.watermark.setObjectName("watermark")
         
         # Reels
@@ -138,13 +137,12 @@ class MainWindow(QWidget):
         for reel in (self.reel1, self.reel2, self.reel3):
             reel.setObjectName("reel")
             reel.setAlignment(Qt.AlignCenter)
-            # OLD: reel.setPixmap(self.symbols["seven"].scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
-            # OLD: reel.setMinimumSize(self.symbol_size, self.symbol_size)  # 400x400 fixed, not responsive
+            reel.setPixmap(self.symbols["seven"].scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
+            reel.setMinimumSize(self.symbol_size, self.symbol_size)  # 400x400 fixed, not responsive
+            # NEW: reels expand/shrink with the window; initial pixmap drawn by _update_reels() after setLayout
+            #reel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            #reel.setMinimumSize(400, 400)  # minimum so the window can shrink freely
             reel.setMaximumSize(700, 700)  # arbitrary large max to allow expansion
-            # BUG2: use Fixed size policy — layout cannot change reel dimensions autonomously.
-            # setFixedSize() is called by _update_reels() and resizeEvent(), so reels are always
-            # kept at the window-derived size without any sizeHint feedback loop.
-            reel.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         self.spin_btn = QPushButton("GIOCA")
         self.spin_btn.setObjectName("spin_btn")
@@ -152,11 +150,11 @@ class MainWindow(QWidget):
         self.spin_btn.clicked.connect(self.on_spin)
 
         # MUSIC CONTROLS
-        self.music_btn = QPushButton("Music: ON")
+        self.music_btn = QPushButton("Music: OFF")
         self.music_btn.setObjectName("music_btn")
         self.music_btn.setFixedWidth(300)
         self.music_btn.setEnabled(True)
-        # self.music_btn.clicked.connect(self.toggle_music) # for experiments user cannot toggle music
+        self.music_btn.clicked.connect(self.toggle_music)
 
         # ===============================
         #            LAYOUTS
@@ -169,11 +167,10 @@ class MainWindow(QWidget):
         bet_controls.addWidget(self.bet_display)
         bet_controls.addWidget(self.bet_down_btn)
         
-        
         # redeem + coins layout (right side)
         redeem_layout = QVBoxLayout()
         redeem_layout.setAlignment(Qt.AlignTop)  # NEW: top-align to match bet_controls
-        #redeem_layout.addWidget(self.redeem_btn)
+        redeem_layout.addWidget(self.redeem_btn)
         redeem_layout.addWidget(self.coin_label)
         
         # Top layout: bet (left), watermark (center), redeem + coins (right)
@@ -188,7 +185,7 @@ class MainWindow(QWidget):
 
         # Middle layout: reels centered
         reels = QHBoxLayout()
-        reels.setAlignment(Qt.AlignCenter)
+        #reels.setAlignment(Qt.AlignCenter)
         reels.addStretch()
         reels.addWidget(self.reel1)
         reels.addWidget(self.reel2)
@@ -230,7 +227,7 @@ class MainWindow(QWidget):
         # ===============================
         #            START BGM
         # ===============================
-        play_bgm("bgm.mp3")
+        #play_bgm("bgm.mp3")
 
 
 
@@ -291,8 +288,8 @@ class MainWindow(QWidget):
             self.update_bet_display()
     
     def validate_bet(self):
-        """Enable GIOCA button only if bet is valid (> 0 and <= available coins) AND not spinning."""
-        is_valid = self.current_bet > 0 and self.current_bet <= self.coins and not self._spinning
+        """Enable GIOCA button only if bet is valid (> 0 and <= available coins)"""
+        is_valid = self.current_bet > 0 and self.current_bet <= self.coins
         self.spin_btn.setEnabled(is_valid)
 
     # ------------------------------------------------------------------
@@ -301,48 +298,28 @@ class MainWindow(QWidget):
     # _update_reels() redraws all three reels at that size.
     # resizeEvent() hooks into Qt's resize pipeline to call _update_reels() automatically.
     # ------------------------------------------------------------------
-    def _compute_reel_size(self) -> int:
-        """Compute the square side length for each reel from current window dimensions.
-
-        Uses window w/h so the value is stable and identical for all callers —
-        never reads reel.width()/height() which would create a feedback loop.
-        """
-        REEL_MAX_SIZE = 700   # ← change this single value to control the maximum reel size
-        w = max(self.width(), 1)
-        h = max(self.height(), 1)
-        # Divide by 4 (not 3) so the three reels don't consume the full window width;
-        # the extra factor leaves breathing room on the sides.
-        available_w = max(80, (w - 100) // 4) #es. w=1080 -> (1080-100padding)/4=245 ; padding=100 lascia spazio ai margini
-        # Reserve 300 px for top controls + bottom bar so reels don't dwarf the UI.
-        available_h = max(80, h - 300)
-        return min(available_w, available_h, REEL_MAX_SIZE)
-
+    
     def _update_reels(self) -> None:
-        """Set each reel to a fixed square size derived from the window, then draw the pixmap.
+        """Rescale and redisplay the current reel symbols to fit each reel's actual widget size.
 
-        Using setFixedSize() makes the reel dimensions completely owned by this method;
-        the layout cannot change them, eliminating the setPixmap→sizeHint feedback loop.
-
-        The pixmap must be scaled to the *inner* content area, not the outer widget size.
-        QSS on #reel applies border: 3px + padding: 10px → 13px consumed per side → 26px total.
-        Scaling to (size - REEL_CHROME) ensures the pixmap fills the content rect exactly
-        without being clipped by the border/padding chrome.
+        Uses reel.width() / reel.height() (real geometry after layout) instead of a window-based
+        estimate.  scaled(w, h, KeepAspectRatio) guarantees the pixmap never exceeds the label
+        in either dimension, so no clipping occurs at any window size.
         """
-        REEL_CHROME = 26  # 2 × (3px border + 10px padding) from #reel QSS — update if QSS changes
-        size = self._compute_reel_size()
-        inner = max(1, size - REEL_CHROME)
         for reel, sym in zip((self.reel1, self.reel2, self.reel3), self.reel_symbols):
-            reel.setFixedSize(size, size)
+            # zip tira fuori: (reel1, sym1); (reel2, sym2); (reel3, sym3)
+            # NEW: use real label geometry; KeepAspectRatio fits the pixmap within w×h exactly
+            w = reel.width()
+            h = reel.height()
             reel.setPixmap(
-                self.symbols[sym].scaled(inner, inner, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.symbols[sym].scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             )
 
 
     def resizeEvent(self, event) -> None:  # noqa: N802
         """Rescale reel pixmaps whenever the window is resized."""
         super().resizeEvent(event)
-        # singleShot(0) defers to after the event loop settles child geometries
-        QTimer.singleShot(0, self._update_reels)
+        self._update_reels()
 
 
     #--------------------------------------------------
@@ -403,11 +380,6 @@ class MainWindow(QWidget):
         self.final_result = spin_reels(self.current_reward, multiplier) #restituisce una tupla di 3 simboli, ad esempio ("cherry", "cherry", "lemon")
         
         self.current_frame = 0
-        # Snapshot the stable window-derived reel size before animation.
-        # _compute_reel_size() uses window dimensions (not reel.width/height) so it never drifts.
-        self._anim_size = self._compute_reel_size()
-        self._update_reels()  # draw initial random symbols at the correct size before starting animation
-        self._spinning = True  # BUG3: block validate_bet from re-enabling GIOCA during animation
         self.spin_timer.start(self.spin_speed)
 
     def animate_spin(self):
@@ -420,21 +392,17 @@ class MainWindow(QWidget):
         #self.reel2.setPixmap(random.choice(random_symbols).scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
         #self.reel3.setPixmap(random.choice(random_symbols).scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
 
-        # Use the frozen window-derived size captured in on_spin.
-        # Subtract the same REEL_CHROME (26px) used in _update_reels so animated frames
-        # are never clipped by the border/padding chrome.
-        REEL_CHROME = 26
-        inner = max(1, self._anim_size - REEL_CHROME)
+        # NEW: use actual reel dimensions (same logic as _update_reels) to avoid clipping
+        # OLD: scaledToWidth(size) with size estimated from window — could exceed label height
         for reel in (self.reel1, self.reel2, self.reel3):
+            w = reel.width()
+            h = reel.height()
             reel.setPixmap(
-                random.choice(random_symbols).scaled(
-                    inner, inner, Qt.KeepAspectRatio, Qt.SmoothTransformation
-                )
+                random.choice(random_symbols).scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             )
 
         if self.current_frame >= self.roll_frames:
             self.spin_timer.stop()
-            self._spinning = False  # BUG3: release lock before show_final_result calls validate_bet
             self.show_final_result()
             # Re-enable only if session is not over (bet 60 disables permanently in show_final_result)
             if self.bet_counter < TOTAL_SESSION_BETS:

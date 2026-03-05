@@ -322,19 +322,12 @@ class MainWindow(QWidget):
 
         Using setFixedSize() makes the reel dimensions completely owned by this method;
         the layout cannot change them, eliminating the setPixmap→sizeHint feedback loop.
-
-        The pixmap must be scaled to the *inner* content area, not the outer widget size.
-        QSS on #reel applies border: 3px + padding: 10px → 13px consumed per side → 26px total.
-        Scaling to (size - REEL_CHROME) ensures the pixmap fills the content rect exactly
-        without being clipped by the border/padding chrome.
         """
-        REEL_CHROME = 26  # 2 × (3px border + 10px padding) from #reel QSS — update if QSS changes
         size = self._compute_reel_size()
-        inner = max(1, size - REEL_CHROME)
         for reel, sym in zip((self.reel1, self.reel2, self.reel3), self.reel_symbols):
-            reel.setFixedSize(size, size)
+            reel.setFixedSize(size, size)  # BUG2: freeze size — layout-proof
             reel.setPixmap(
-                self.symbols[sym].scaled(inner, inner, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.symbols[sym].scaled(size, size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             )
 
 
@@ -420,15 +413,11 @@ class MainWindow(QWidget):
         #self.reel2.setPixmap(random.choice(random_symbols).scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
         #self.reel3.setPixmap(random.choice(random_symbols).scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
 
-        # Use the frozen window-derived size captured in on_spin.
-        # Subtract the same REEL_CHROME (26px) used in _update_reels so animated frames
-        # are never clipped by the border/padding chrome.
-        REEL_CHROME = 26
-        inner = max(1, self._anim_size - REEL_CHROME)
+        # Use the frozen window-derived size captured in on_spin
         for reel in (self.reel1, self.reel2, self.reel3):
             reel.setPixmap(
                 random.choice(random_symbols).scaled(
-                    inner, inner, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                    self._anim_size, self._anim_size, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
 
