@@ -642,7 +642,7 @@ class MainWindow(QWidget):
 
         Comportamento:
         - Resetta lo stato della sessione (coins=INITIAL_BUDGET, bet_counter=0).
-        - enable_metrics è già chiamato da RemoteResearcher.start_metrics(), ma solo per il primo test
+        - enable_metrics è già chiamato da RemoteResearcher.start_metrics() prima di questa.
         - Esegue esattamente TOTAL_SESSION_BETS*TOTAL_TESTS spin sincroni via _execute_spin_logic(),
           ciascuno con una puntata casuale tra MIN_BET e MAX_BET (step BET_STEP).
         - condizione di partenza: inserita assieme a TEST + <CONDIZIONE> da researcher
@@ -674,10 +674,8 @@ class MainWindow(QWidget):
             
             # La prima condizione già settata in input, devo settare le condizioni ogni test per i successivi
             if test > 0:
-                # simulo remote_researcher.set_input_data() fornendo una condition creata
                 condition = random.choice(list(VALID_CONDITIONS.values()))
                 remote_researcher.set_condition(condition)
-                remote_researcher.start_metrics() # ogni test resetta le metriche, quindi chiamo start_metrics() per resettare e abilitare il logging per il nuovo test
             else:
                 # BUG FIX: assign condition on test==0 too, otherwise the print below raises NameError
                 condition = remote_researcher.get_current_condition()
@@ -691,7 +689,7 @@ class MainWindow(QWidget):
                 self.current_bet = random.choice(range(int(MIN_BET*10), int(MAX_BET*10)+1, int(BET_STEP*10))) / 10.0
                 self._execute_spin_logic()
 
-        # close the window after all TOTAL_TESTS sessions are done.
+        # BUG FIX: close the window after all TOTAL_TESTS sessions are done.
         # _execute_spin_logic auto-close is commented out for v2, so we must close here.
         # closeEvent → log_session_end() is triggered automatically.
         print(f"[TEST] All {TOTAL_TESTS} tests completed.")

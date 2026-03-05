@@ -27,8 +27,7 @@ if __name__ == "__main__":
     # Se TEST_MODE è attivo, avvia il test automatico sincrono
     # La GUI rimane visibile ma disabilitata per tutta la durata del test.
     if remote_researcher.test_mode:
-        #TODO ATTENZIONE: se si seleziona la v1 decommentare l'auto-close in _execute_spin_logic()
         #window.testing_statistics_v1()
-        window.testing_statistics_v2(remote_researcher=remote_researcher)
+        window.testing_statistics_v2(remote_researcher: RemoteResearcher)
 
     sys.exit(app.exec_())

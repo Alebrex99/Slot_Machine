@@ -13,10 +13,8 @@ from gui.redeem_dialog import RedeemDialog
 from core.metrics_logger import MetricsLogger   # ← NEW
 from utils.file_manager import get_path
 from PyQt5.QtWidgets import QApplication
-from core.constants import INITIAL_BUDGET, MIN_BET, MAX_BET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH, TOTAL_TESTS, VALID_CONDITIONS
+from core.constants import INITIAL_BUDGET, MIN_BET, MAX_BET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH, TOTAL_TESTS
  
-# FOR TESTING
-from core.remote_researcher import RemoteResearcher
 
 class MainWindow(QWidget):
     def __init__(self, metrics_logger: MetricsLogger):
@@ -581,11 +579,11 @@ class MainWindow(QWidget):
         )
 
         # TEST VERSION 1: CHIUSURA AUTOMATICA DOPO 60 PUNTATE: >= TOTAL_SESSION_BETS
-        # TEST VERSION 2: 50 STRESS TEST PER CONDIZIONE, POI CHIUSURA -> commentare la chiusura
+        # TEST VERSION 2: 50 STRESS TEST PER CONDIZIONE, POI CHIUSURA: >= TOTAL_SESSION_BETS*TOTAL_TESTS
         # Auto-close after the configured number of bets
-        '''if self.bet_counter >= TOTAL_SESSION_BETS: # 60bets * 50 tests = 3000
+        if self.bet_counter >= TOTAL_SESSION_BETS*TOTAL_TESTS: # 60bets * 50 tests = 3000
             print(f"[TEST] Sessione completata: {self.bet_counter} puntate loggate.")
-            self.close() '''
+            self.close() 
             
         
                        
@@ -634,7 +632,7 @@ class MainWindow(QWidget):
             self._execute_spin_logic()
 
     # TEST VERSION 2
-    def testing_statistics_v2(self, remote_researcher: RemoteResearcher) -> None:
+    def testing_statistics_v2(self) -> None:
         """Simula TOTAL_TESTS sessioni complete di TOTAL_SESSION_BETS puntate consecutive in TEST MODE.
 
         Chiamata da main.py quando researcher.test_mode è True, subito dopo window.show()
@@ -642,7 +640,7 @@ class MainWindow(QWidget):
 
         Comportamento:
         - Resetta lo stato della sessione (coins=INITIAL_BUDGET, bet_counter=0).
-        - enable_metrics è già chiamato da RemoteResearcher.start_metrics(), ma solo per il primo test
+        - enable_metrics è già chiamato da RemoteResearcher.start_metrics() prima di questa.
         - Esegue esattamente TOTAL_SESSION_BETS*TOTAL_TESTS spin sincroni via _execute_spin_logic(),
           ciascuno con una puntata casuale tra MIN_BET e MAX_BET (step BET_STEP).
         - condizione di partenza: inserita assieme a TEST + <CONDIZIONE> da researcher
@@ -656,47 +654,34 @@ class MainWindow(QWidget):
 
         Al riavvio dell'app una nuova sessione viene appesa al CSV esistente.
         """
-        # PER OGNI SESSEION TESTATA:
+
         for test in range(TOTAL_TESTS):
-            # Inizializza stato sessione come in una vera partita
-            self.coins = INITIAL_BUDGET
-            self.bet_counter = 0
-            self.current_bet = MIN_BET  # valore iniziale; verrà sovrascritto ad ogni iterazione del loop
-
-            # Reset phase-global budget variables in slot_logic before each TEST of TOTAL_TESTS
-            import core.slot_logic as _sl
-            _sl.initial_budget_before = None
-            _sl.initial_budget_during = None
-            _sl.initial_budget_after  = None
-
-            self.update_coin_label()
-            self.update_bet_display()
-            
             # La prima condizione già settata in input, devo settare le condizioni ogni test per i successivi
             if test > 0:
-                # simulo remote_researcher.set_input_data() fornendo una condition creata
-                condition = random.choice(list(VALID_CONDITIONS.values()))
-                remote_researcher.set_condition(condition)
-                remote_researcher.start_metrics() # ogni test resetta le metriche, quindi chiamo start_metrics() per resettare e abilitare il logging per il nuovo test
-            else:
-                # BUG FIX: assign condition on test==0 too, otherwise the print below raises NameError
-                condition = remote_researcher.get_current_condition()
-                print(f"[TEST] Starting first test with initial condition: {condition}")
-
+                condition = random.choice(["WIN", "EQUAL", "LOSS"])
+            self._metrics.set_test_condition(condition)
             print(f"[TEST] Starting test {test+1}/{TOTAL_TESTS} with condition: {condition}")
-
-            # Simula esattamente 60 puntate consecutive, ciascuna con puntata casuale [MIN_BET, MAX_BET].
-            for _ in range(TOTAL_SESSION_BETS):
-                # Random bet from MIN_BET to MAX_BET (inclusive) in BET_STEP increments: poichè random crea seq interi, prima la creo sulle decine, poi divido per 10
-                self.current_bet = random.choice(range(int(MIN_BET*10), int(MAX_BET*10)+1, int(BET_STEP*10))) / 10.0
-                self._execute_spin_logic()
-
-        # close the window after all TOTAL_TESTS sessions are done.
-        # _execute_spin_logic auto-close is commented out for v2, so we must close here.
-        # closeEvent → log_session_end() is triggered automatically.
-        print(f"[TEST] All {TOTAL_TESTS} tests completed.")
-        self.close()
-            
         
+        
+        
+        # Inizializza stato sessione come in una vera partita
+        self.coins = INITIAL_BUDGET
+        self.bet_counter = 0
+        self.current_bet = MIN_BET  # valore iniziale; verrà sovrascritto ad ogni iterazione del loop
 
+        # Reset phase-global budget variables in slot_logic before each TEST of TOTAL_TESTS
+        import core.slot_logic as _sl
+        _sl.initial_budget_before = None
+        _sl.initial_budget_during = None
+        _sl.initial_budget_after  = None
 
+        # enable_metrics already called by RemoteResearcher.start_metrics() — no need to repeat here.
+        self.update_coin_label()
+        self.update_bet_display()
+
+        # Simula esattamente 60 puntate consecutive, ciascuna con puntata casuale [MIN_BET, MAX_BET].
+        # Al termine dell'ultima, _execute_spin_logic chiama self.close() → SESSION_END.
+        for _ in range(TOTAL_SESSION_BETS * TOTAL_TESTS):
+            # Random bet from MIN_BET to MAX_BET (inclusive) in BET_STEP increments: poichè random crea seq interi, prima la creo sulle decine, poi divido per 10
+            self.current_bet = random.choice(range(int(MIN_BET*10), int(MAX_BET*10)+1, int(BET_STEP*10))) / 10.0
+            self._execute_spin_logic()

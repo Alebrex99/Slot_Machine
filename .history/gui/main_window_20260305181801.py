@@ -13,10 +13,8 @@ from gui.redeem_dialog import RedeemDialog
 from core.metrics_logger import MetricsLogger   # ← NEW
 from utils.file_manager import get_path
 from PyQt5.QtWidgets import QApplication
-from core.constants import INITIAL_BUDGET, MIN_BET, MAX_BET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH, TOTAL_TESTS, VALID_CONDITIONS
+from core.constants import INITIAL_BUDGET, MIN_BET, MAX_BET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH
  
-# FOR TESTING
-from core.remote_researcher import RemoteResearcher
 
 class MainWindow(QWidget):
     def __init__(self, metrics_logger: MetricsLogger):
@@ -324,19 +322,12 @@ class MainWindow(QWidget):
 
         Using setFixedSize() makes the reel dimensions completely owned by this method;
         the layout cannot change them, eliminating the setPixmap→sizeHint feedback loop.
-
-        The pixmap must be scaled to the *inner* content area, not the outer widget size.
-        QSS on #reel applies border: 3px + padding: 10px → 13px consumed per side → 26px total.
-        Scaling to (size - REEL_CHROME) ensures the pixmap fills the content rect exactly
-        without being clipped by the border/padding chrome.
         """
-        REEL_CHROME = 26  # 2 × (3px border + 10px padding) from #reel QSS — update if QSS changes
         size = self._compute_reel_size()
-        inner = max(1, size - REEL_CHROME)
         for reel, sym in zip((self.reel1, self.reel2, self.reel3), self.reel_symbols):
-            reel.setFixedSize(size, size)
+            reel.setFixedSize(size, size)  # BUG2: freeze size — layout-proof
             reel.setPixmap(
-                self.symbols[sym].scaled(inner, inner, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.symbols[sym].scaled(size, size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             )
 
 
@@ -422,15 +413,11 @@ class MainWindow(QWidget):
         #self.reel2.setPixmap(random.choice(random_symbols).scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
         #self.reel3.setPixmap(random.choice(random_symbols).scaledToWidth(self.symbol_size, Qt.SmoothTransformation))
 
-        # Use the frozen window-derived size captured in on_spin.
-        # Subtract the same REEL_CHROME (26px) used in _update_reels so animated frames
-        # are never clipped by the border/padding chrome.
-        REEL_CHROME = 26
-        inner = max(1, self._anim_size - REEL_CHROME)
+        # Use the frozen window-derived size captured in on_spin
         for reel in (self.reel1, self.reel2, self.reel3):
             reel.setPixmap(
                 random.choice(random_symbols).scaled(
-                    inner, inner, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                    self._anim_size, self._anim_size, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
 
@@ -580,17 +567,13 @@ class MainWindow(QWidget):
             current_coin=self.coins,
         )
 
-        # TEST VERSION 1: CHIUSURA AUTOMATICA DOPO 60 PUNTATE: >= TOTAL_SESSION_BETS
-        # TEST VERSION 2: 50 STRESS TEST PER CONDIZIONE, POI CHIUSURA -> commentare la chiusura
         # Auto-close after the configured number of bets
-        '''if self.bet_counter >= TOTAL_SESSION_BETS: # 60bets * 50 tests = 3000
+        if self.bet_counter >= TOTAL_SESSION_BETS:
             print(f"[TEST] Sessione completata: {self.bet_counter} puntate loggate.")
-            self.close() '''
-            
-        
+            self.close() 
                        
-    # TEST VERSION 1
-    def testing_statistics_v1(self) -> None:
+
+    def testing_statistics(self) -> None:
         """Simula una sessione completa di TOTAL_SESSION_BETS puntate consecutive in TEST MODE.
 
         Chiamata da main.py quando researcher.test_mode è True, subito dopo window.show()
@@ -632,71 +615,3 @@ class MainWindow(QWidget):
             # Random bet from MIN_BET to MAX_BET (inclusive) in BET_STEP increments: poichè random crea seq interi, prima la creo sulle decine, poi divido per 10
             self.current_bet = random.choice(range(int(MIN_BET*10), int(MAX_BET*10)+1, int(BET_STEP*10))) / 10.0
             self._execute_spin_logic()
-
-    # TEST VERSION 2
-    def testing_statistics_v2(self, remote_researcher: RemoteResearcher) -> None:
-        """Simula TOTAL_TESTS sessioni complete di TOTAL_SESSION_BETS puntate consecutive in TEST MODE.
-
-        Chiamata da main.py quando researcher.test_mode è True, subito dopo window.show()
-        e prima che app.exec_() venga avviato.
-
-        Comportamento:
-        - Resetta lo stato della sessione (coins=INITIAL_BUDGET, bet_counter=0).
-        - enable_metrics è già chiamato da RemoteResearcher.start_metrics(), ma solo per il primo test
-        - Esegue esattamente TOTAL_SESSION_BETS*TOTAL_TESTS spin sincroni via _execute_spin_logic(),
-          ciascuno con una puntata casuale tra MIN_BET e MAX_BET (step BET_STEP).
-        - condizione di partenza: inserita assieme a TEST + <CONDIZIONE> da researcher
-        - Ogni TOTAL_SESSION_BETS setta automaticamente una nuova condizione casuale tra WIN, EQUAL, LOSS
-        - All'ultima puntata dell'ultimo test (bet_counter == TOTAL_SESSION_BETS * TOTAL_TESTS) _execute_spin_logic chiama
-          self.close() → closeEvent → SESSION_END loggato automaticamente.
-
-        Resistente alle future modifiche di slot_logic.py: tutta la logica di vincita/perdita
-        è delegata a _execute_spin_logic → spin_reels() → calculate_reward(), esattamente
-        come avverrebbe in una sessione reale dell'utente.
-
-        Al riavvio dell'app una nuova sessione viene appesa al CSV esistente.
-        """
-        # PER OGNI SESSEION TESTATA:
-        for test in range(TOTAL_TESTS):
-            # Inizializza stato sessione come in una vera partita
-            self.coins = INITIAL_BUDGET
-            self.bet_counter = 0
-            self.current_bet = MIN_BET  # valore iniziale; verrà sovrascritto ad ogni iterazione del loop
-
-            # Reset phase-global budget variables in slot_logic before each TEST of TOTAL_TESTS
-            import core.slot_logic as _sl
-            _sl.initial_budget_before = None
-            _sl.initial_budget_during = None
-            _sl.initial_budget_after  = None
-
-            self.update_coin_label()
-            self.update_bet_display()
-            
-            # La prima condizione già settata in input, devo settare le condizioni ogni test per i successivi
-            if test > 0:
-                # simulo remote_researcher.set_input_data() fornendo una condition creata
-                condition = random.choice(list(VALID_CONDITIONS.values()))
-                remote_researcher.set_condition(condition)
-                remote_researcher.start_metrics() # ogni test resetta le metriche, quindi chiamo start_metrics() per resettare e abilitare il logging per il nuovo test
-            else:
-                # BUG FIX: assign condition on test==0 too, otherwise the print below raises NameError
-                condition = remote_researcher.get_current_condition()
-                print(f"[TEST] Starting first test with initial condition: {condition}")
-
-            print(f"[TEST] Starting test {test+1}/{TOTAL_TESTS} with condition: {condition}")
-
-            # Simula esattamente 60 puntate consecutive, ciascuna con puntata casuale [MIN_BET, MAX_BET].
-            for _ in range(TOTAL_SESSION_BETS):
-                # Random bet from MIN_BET to MAX_BET (inclusive) in BET_STEP increments: poichè random crea seq interi, prima la creo sulle decine, poi divido per 10
-                self.current_bet = random.choice(range(int(MIN_BET*10), int(MAX_BET*10)+1, int(BET_STEP*10))) / 10.0
-                self._execute_spin_logic()
-
-        # close the window after all TOTAL_TESTS sessions are done.
-        # _execute_spin_logic auto-close is commented out for v2, so we must close here.
-        # closeEvent → log_session_end() is triggered automatically.
-        print(f"[TEST] All {TOTAL_TESTS} tests completed.")
-        self.close()
-            
-        
-
-

@@ -102,7 +102,7 @@ def loss_recover(initial_budget_phase, budget_before_spin, current_bet_counter, 
     multiplier = calculate_multiplier(expected_reward, current_bet)
     reward = round(current_bet * multiplier, 2)
     # differenza tra due float -> periodica -> come gestirla ? implementa una soluzione
-    print(f"VITTORIA! Bet n° {current_bet_counter}, expected_reward: {expected_reward}, moltiplicatore: {multiplier}x, gain reale: {round(reward - current_bet, 2)}, reward: {reward}")
+    print(f"VITTORIA! Bet n° {current_bet_counter}, expected_reward: {expected_reward}, moltiplicatore: {multiplier}x, gain reale: {reward - current_bet}, reward: {reward}")
     return reward, multiplier
 
 
@@ -114,7 +114,7 @@ def win_increase(current_bet_counter, current_bet):
     expected_reward = round(expected_percentage_increase * initial_budget_during + current_bet, 2)
     multiplier = calculate_multiplier(expected_reward, current_bet)
     reward = round(current_bet * multiplier, 2)
-    print(f"VITTORIA! Bet n° {current_bet_counter}, expected_reward: {expected_reward}, expected_%_WIN: {expected_percentage_increase}, moltiplicatore: {multiplier}x, gain reale: {round(reward - current_bet, 2)}, reward: {reward}")
+    print(f"VITTORIA! Bet n° {current_bet_counter}, expected_reward: {expected_reward}, expected_%_WIN: {expected_percentage_increase}, moltiplicatore: {multiplier}x, gain reale: {reward - current_bet}, reward: {reward}")
     return reward, multiplier
 
 
@@ -135,13 +135,13 @@ def lose_increase(budget_before_spin, current_bet_counter, current_bet):
     if lose_difference > 0: # lose_value > expected_lose_value
         multiplier = calculate_multiplier(lose_difference, current_bet)
         reward = round(current_bet * multiplier, 2)
-        print(f"CHECKPOINT CONTENTINO! Bet n° {current_bet_counter}, lose_value: {lose_value}, expected_lose_value: {expected_lose_value}, lose_difference: {round(lose_difference, 2)}, multiplier: {multiplier}x, gain reale: {round(reward - current_bet, 2)}, reward: {reward}")
+        print(f"CHECKPOINT CONTENTINO! Bet n° {current_bet_counter}, lose_value: {lose_value}, expected_lose_value: {expected_lose_value}, lose_difference: {lose_difference}, multiplier: {multiplier}x, gain reale: {reward - current_bet}, reward: {reward}")
         return reward, multiplier
     # altrimenti non hai perso abbastanza
     else: # lose_value < expected_lose_value
         multiplier = 1 # il minimo per dare una ricompensa più piccola possibile al checkpoint
         reward = round(current_bet * multiplier, 2)
-        print(f"CHECKPOINT MINIMO! Bet n° {current_bet_counter}, lose_value: {lose_value}, expected_lose_value: {expected_lose_value}, lose_difference: {round(lose_difference, 2)}, multiplier: {multiplier}x, gain reale: {round(reward - current_bet, 2)}, reward: {reward}")
+        print(f"CHECKPOINT MINIMO! Bet n° {current_bet_counter}, lose_value: {lose_value}, expected_lose_value: {expected_lose_value}, lose_difference: {lose_difference}, multiplier: {multiplier}x, gain reale: {reward - current_bet}, reward: {reward}")
         return reward, multiplier
 
 

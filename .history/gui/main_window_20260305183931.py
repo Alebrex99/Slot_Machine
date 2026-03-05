@@ -674,7 +674,7 @@ class MainWindow(QWidget):
             
             # La prima condizione già settata in input, devo settare le condizioni ogni test per i successivi
             if test > 0:
-                # simulo remote_researcher.set_input_data() fornendo una condition creata
+                # simulo rremoteresearcher.set_input_data():
                 condition = random.choice(list(VALID_CONDITIONS.values()))
                 remote_researcher.set_condition(condition)
                 remote_researcher.start_metrics() # ogni test resetta le metriche, quindi chiamo start_metrics() per resettare e abilitare il logging per il nuovo test

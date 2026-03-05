@@ -8,7 +8,7 @@ MAX_BET: float = 2.0
 BET_STEP: float = 0.10
 TOTAL_SESSION_BETS: int = 60
 PHASE_LENGTH: int = 20
-TOTAL_TESTS: int = 50
+TOTAL_SESSION_TESTS: int = 50
 
 # ---------------REMOTE RESEARCHER CONSTANTS-----------------
 VALID_CONDITIONS = {
