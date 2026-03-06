@@ -9,11 +9,12 @@ import sys
 from core.slot_logic import spin_reels, calculate_reward
 from core.sound_manager import play_sfx, play_bgm, stop_bgm
 from core.redeem_logic import validate_redeem_code
+from gui.message_window import MessageWindow
 from gui.redeem_dialog import RedeemDialog
 from core.metrics_logger import MetricsLogger   # ← NEW
 from utils.file_manager import get_path
 from PyQt5.QtWidgets import QApplication
-from core.constants import INITIAL_BUDGET, MIN_BET, MAX_BET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH, TOTAL_TESTS, VALID_CONDITIONS
+from core.constants import INITIAL_BUDGET, MESSAGE_COUNTER_POINT, MIN_BET, MAX_BET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH, TOTAL_TESTS, VALID_CONDITIONS
  
 # FOR TESTING
 from core.remote_researcher import RemoteResearcher
@@ -54,7 +55,7 @@ class MainWindow(QWidget):
         self.coins = INITIAL_BUDGET
         self.current_bet = 0.00
         # Experimental session tracking
-        self.bet_counter = 0  # counts from 0 -> increment before each bet to 1..60
+        self.bet_counter = 39 # counts from 0 -> increment before each bet to 1..60
         self.current_reward = 0.00
         self._spinning = False  # True while the spin animation is running
         
@@ -339,7 +340,6 @@ class MainWindow(QWidget):
                 self.symbols[sym].scaled(inner, inner, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             )
 
-
     def resizeEvent(self, event) -> None:  # noqa: N802
         """Rescale reel pixmaps whenever the window is resized."""
         super().resizeEvent(event)
@@ -488,6 +488,15 @@ class MainWindow(QWidget):
             self.watermark.setText(f"Hai vinto +{reward:.2f}")
         else:
             self.watermark.setText("Try again!")
+  
+        # GESTIONE DEL MESSAGGIO
+        # user in bet 40 (ultima di DURING) -> clicca spin -> risultato mostrato
+        # alla fine lo spin button viene, temporalmente, sbilitato a fare un altra cosa: open_message()
+        if self.bet_counter == MESSAGE_COUNTER_POINT:  # punto di trigger del messaggio, fine fase DURING
+            # viene modificato
+            print("TRIGGER MESSAGE SETTED for next bet")
+            self.spin_btn.clicked.disconnect()
+            self.spin_btn.clicked.connect(self.on_message)
 
         # FIX: auto-close AFTER bet 60 is fully processed and logged.
         # Old location (on_spin before processing) required a 61st press.
@@ -495,7 +504,24 @@ class MainWindow(QWidget):
             self.spin_btn.setDisabled(True)
             QTimer.singleShot(1500, self.close)
 
+    def on_message(self):
+        """Called when the user presses SPIN after bet 40 (spin_btn is temporarily connected here).
 
+        Opens the full-screen MessageWindow. When the user closes it after the 30-second timer,
+        open_message_callback() reconnects spin_btn to on_spin() so the session continues from bet 41.
+        """
+        play_sfx("click.wav")
+        message_window = MessageWindow(open_message_callback=self.open_message_callback, parent=self)
+        message_window.show()
+
+    def open_message_callback(self):
+        # appena la finestra si chiude
+        # reimpostare lo spin button collegandolo nuovamente a on_spin() e non più a on_message()
+        play_sfx("click.wav")
+        self.spin_btn.clicked.disconnect()
+        self.spin_btn.clicked.connect(self.on_spin)
+    
+    
     def redeem_code_callback(self, code: str) -> int:
         coins_to_add = validate_redeem_code(code)
         if coins_to_add:
@@ -586,9 +612,7 @@ class MainWindow(QWidget):
         '''if self.bet_counter >= TOTAL_SESSION_BETS: # 60bets * 50 tests = 3000
             print(f"[TEST] Sessione completata: {self.bet_counter} puntate loggate.")
             self.close() '''
-            
-        
-                       
+                             
     # TEST VERSION 1
     def testing_statistics_v1(self) -> None:
         """Simula una sessione completa di TOTAL_SESSION_BETS puntate consecutive in TEST MODE.

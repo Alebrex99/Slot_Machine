@@ -103,8 +103,6 @@ class RemoteResearcher:
         """Ritorna la condition corrente."""
         return self._current_condition  
     
-    
-    
     # --------------------------------------------------------------------------------------
     # Remote event stubs (futura integrazione TCP) attuale è tutto da INPUT sulla stessa APP
     # --------------------------------------------------------------------------------------

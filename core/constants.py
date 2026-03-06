@@ -9,6 +9,8 @@ BET_STEP: float = 0.10
 TOTAL_SESSION_BETS: int = 60
 PHASE_LENGTH: int = 20
 TOTAL_TESTS: int = 50
+MESSAGE_COUNTER_POINT = 40  # punto in cui mostrare il messaggio a metà sessione (dopo 40 scommesse, all'inizio della fase AFTER)
+MESSAGE_TIMER = 30  # secondi per cui mostrare il messaggio a metà sessione
 
 # ---------------REMOTE RESEARCHER CONSTANTS-----------------
 VALID_CONDITIONS = {
