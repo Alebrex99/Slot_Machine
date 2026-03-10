@@ -1,4 +1,5 @@
-﻿"""VARIANTE CON BOTTOM COINTER IN OVERLAY SU IMMAGINE"""
+﻿'''VARIANTE CON BOTTOM COINTER SOTTO IMMAGINE'''
+
 
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtGui import QPixmap
@@ -58,28 +59,23 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         if self._pixmap.isNull():
             self._pixmap = QPixmap(get_path("gui", "assets", "icons", "banana.png"))
 
-        # ---------------Layout--------------------------------------
-        layout = QVBoxLayout(self) # PADRE
+        # ---------------Layout---------------------
+        layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         # Image fills all available vertical space (stretch=1).
-        self.mex_label = QLabel() # Figlio di Layout
+        self.mex_label = QLabel()
         self.mex_label.setObjectName("mex_label")
         self.mex_label.setAlignment(Qt.AlignCenter)
-        #self.mex_label.setStyleSheet("background-color: black;")
+        self.mex_label.setStyleSheet("background-color: black;")
         layout.addWidget(self.mex_label, 1)
 
-        # bottom_container è figlio di mex_label (non del layout esterno): viene posizionato in basso dal layout interno di mex_label e compare visivamente sopra il pixmap
-        mex_layout = QVBoxLayout(self.mex_label) # figlio di mex_label
-        mex_layout.setContentsMargins(0, 0, 0, 0)
-        mex_layout.setSpacing(0)
-        mex_layout.addStretch(1)  # spinge bottom_container in fondo all'immagine
-
         # Bottom row: [countdown]  [CLOSE]  - horizontally centered.
-        self.bottom_container = QWidget(self.mex_label) # figlio di mex_label per essere in overlay sopra il pixmap, non del layout esterno
-        self.bottom_container.setObjectName("bottom_container")
-        #self.bottom_container.setStyleSheet("background-color: black;")
+        # OLD: layout.addLayout(bottom) con QHBoxLayout → usa in realtà il global QWidget { background } del QSS
+        #      applicava il colore grigio della MainWindow a solo il bottom della window secondaria (nera da mex_label)
+        self.bottom_container = QWidget()
+        self.bottom_container.setStyleSheet("background-color: black;")
         
         bottom = QHBoxLayout(self.bottom_container)
         bottom.setContentsMargins(0, 10, 0, 20)
@@ -94,9 +90,11 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         self.close_btn.setEnabled(False)
         self.close_btn.clicked.connect(self.on_close)
 
+        # bottom.addStretch(1) # causa la presenza della fascia grigia lungo tutta la finestra
         bottom.addWidget(self.countdown_label)
         bottom.addWidget(self.close_btn)
-        mex_layout.addWidget(self.bottom_container, 0, Qt.AlignHCenter)  # OLD: layout.addLayout(bottom)
+        # bottom.addStretch(1)
+        layout.addWidget(self.bottom_container, 0, Qt.AlignHCenter)  # OLD: layout.addLayout(bottom)
         # --------------------------------------------------------------------------------
 
         # START
@@ -115,7 +113,7 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         if p and self.isVisible():
             # Appena chiamato setGeometry -> Qt chiama resizeEvent() -> schedula _render_image() al prossimo loop
             self.setGeometry(0, 0, p.width(), p.height()) # spostamento in alto a sx + resize
-            #self.setGeometry(self.main_window.frameGeometry()) # X COPRIRE CONTROLLI APP, MA NON SI PUO RIDIMENSIONARE LA FINESTRA
+            #self.setGeometry(self.main_window.frameGeometry()) # SE SI VUOLE COPRIRE CONTROLLI APP, MA NON SI PUO RIDIMENSIONARE LA FINESTRA
             self.raise_()  # rimane sopra i widget fratelli dopo il resize (per sicurezza, ma non serve)
             QTimer.singleShot(0, self._render_image)
 
@@ -148,6 +146,7 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         if self._elapsed >= MESSAGE_TIMER:
             self._timer.stop()
             self._timer_done = True
+            self.bottom_container.raise_() # tra fratelli
             self.close_btn.setEnabled(True)
             self.close_btn.setStyleSheet("background-color: green")
 

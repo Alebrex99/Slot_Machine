@@ -156,3 +156,40 @@ QWidget {
     border: 3px solid #2f2f35;
     color: #666;
 }
+
+/* ===== Message Window ===== */
+#close_btn {
+    background-color: #098c00;
+    padding: 15px;
+    border-radius: 15px;
+    font-size: 50px;
+    font-weight: bold;
+    border: 5px solid #383a42;
+    letter-spacing: 2px;
+}
+
+#close_btn:hover {
+    background-color: #5cb700;
+    border: 3px solid #50525c;
+}
+
+#close_btn:pressed {
+    background-color: #1e2027;
+    border: 3px solid #30323a;
+}
+
+#close_btn:disabled {
+    background-color: #1f1f23;
+    border: 3px solid #2f2f35;
+    color: #666;
+}
+
+#countdown_label {
+    background-color: #1f1f23;
+    padding: 15px;
+    border-radius: 15px;
+    font-size: 50px;
+    font-weight: bold;
+    border: 5px solid #383a42;
+    letter-spacing: 2px;
+}

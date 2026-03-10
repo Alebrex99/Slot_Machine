@@ -2,7 +2,7 @@
 # NEW: added QSizePolicy for responsive reel sizing
 from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QSizePolicy
 from PyQt5.QtGui import QPixmap, QIcon, QDoubleValidator
-from PyQt5.QtCore import Qt, QTimer, QSize
+from PyQt5.QtCore import Qt, QTimer, QSize, QPoint
 import random
 import sys
 
@@ -85,6 +85,11 @@ class MainWindow(QWidget):
             "seven":   QPixmap(get_path("gui", "assets", "icons", "seven.png")),
             "star":    QPixmap(get_path("gui", "assets", "icons", "star.png")),
         }
+
+        # ===============================
+        #          MESSAGE WINDOW
+        # ===============================
+        self.message_window = None #Preparo il QWidget figlio che sarà una classe MessageWindow
 
         # ===============================
         #           UI ELEMENTS
@@ -340,11 +345,17 @@ class MainWindow(QWidget):
                 self.symbols[sym].scaled(inner, inner, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             )
 
-    def resizeEvent(self, event) -> None:  # noqa: N802
+    def resizeEvent(self, event) -> None:
         """Rescale reel pixmaps whenever the window is resized."""
         super().resizeEvent(event)
         # singleShot(0) defers to after the event loop settles child geometries
         QTimer.singleShot(0, self._update_reels)
+        
+        # Keep the MessageWindow overlay aligned when the main window is resized.
+        # Defer via singleShot(0) — fires once after the resize gesture settles, not on every pixel during a drag (which caused rapid flicker).
+        if self.message_window is not None and self.message_window.isVisible():
+            QTimer.singleShot(0, self.message_window._sync_to_parent)
+            #self.message_window._sync_to_parent() # funziona uguale ma con + flicker
 
 
     #--------------------------------------------------
@@ -504,6 +515,10 @@ class MainWindow(QWidget):
             self.spin_btn.setDisabled(True)
             QTimer.singleShot(1500, self.close)
 
+
+    #--------------------------------------------------
+    #                   MESSAGGIO   
+    #--------------------------------------------------
     def on_message(self):
         """Called when the user presses SPIN after bet 40 (spin_btn is temporarily connected here).
 
@@ -511,8 +526,10 @@ class MainWindow(QWidget):
         open_message_callback() reconnects spin_btn to on_spin() so the session continues from bet 41.
         """
         play_sfx("click.wav")
-        message_window = MessageWindow(open_message_callback=self.open_message_callback, parent=self)
-        message_window.show()
+        self.message_window = MessageWindow(open_message_callback=self.open_message_callback, parent=self)
+        self.message_window.show()
+        # Aggiunto per sicurezza ma non serve perchè message_window aggiunto per ultimo in overlay (size)
+        self.message_window.raise_()  # porta il widget sopra tutti i widget fratelli (perchè la finestra del messaggio è un semplice QWidget figlio di MainWindow, non è una finestra separata)
 
     def open_message_callback(self):
         # appena la finestra si chiude
