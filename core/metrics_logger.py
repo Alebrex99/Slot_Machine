@@ -9,14 +9,14 @@ import csv
 import os
 from datetime import datetime
 from typing import Optional
+from utils.file_manager import get_writable_path
 
 # CSV column headers (updated schema)
 # TIMESTAMP | EVENT | BET_NUMBER | BET | CONDITION | RESULT | COIN | MESSAGE
 _CSV_COLUMNS = ["TIMESTAMP", "EVENT", "BET_NUMBER", "BET", "CONDITION", "RESULT", "COIN", "MESSAGE"]
 
 # Default path for the metrics CSV file
-_CSV_PATH = "data/metrics.csv"
-
+#_CSV_PATH = "data/metrics.csv" # OLD: path realtivo del progetto
 
 class MetricsLogger:
     """Append-only CSV logger for slot machine session and gameplay events.
@@ -25,8 +25,13 @@ class MetricsLogger:
         csv_path: Path to the output CSV file. Created if it does not exist.
     """
 
-    def __init__(self, csv_path: str = _CSV_PATH) -> None:
+    def __init__(self, csv_path: str = None) -> None:
+        if csv_path is None:
+            csv_path = get_writable_path("data", "metrics.csv")  # Default path, compatible with builds
         self._csv_path = csv_path
+        # Ensure the dist/data/ directory exists (e.g. first run of the frozen exe)
+        os.makedirs(os.path.dirname(self._csv_path), exist_ok=True) # crea la cartella data se non esiste, anche per le build in cui il csv è salvato in dist/data/metrics.csv
+        
         self._metrics_enabled: bool = False
         self._current_condition: Optional[str] = None
         # Create file with headers if it does not exist

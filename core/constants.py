@@ -1,6 +1,12 @@
 # Tutte le costanti condivise tra gui e core
 # Nessun import da altri moduli interni → nessun rischio di circolarità
 
+# -----------------BUILD CONFIG-------------------
+# None = manual mode (RemoteResearcher prompt at startup)
+# "W" / "L" / "E" = fixed build: skips the prompt (Aggiunta in automatico dallo script di build)
+BUILD_CONDITION: str | None = None
+
+
 # -----------------GAME CONSTANTS-------------------
 INITIAL_BUDGET: float = 100.0
 MIN_BET: float = 0.10
