@@ -48,6 +48,7 @@ class MainWindow(QWidget):
         self.setWindowTitle("Slot Machine")
         self.setWindowIcon(QIcon(get_path("gui", "assets", "icons", "app_icon.ico")))
         self.setMinimumSize(600, 400)
+        
 
         # ===============================
         #          GAME VARIABLES
@@ -55,7 +56,7 @@ class MainWindow(QWidget):
         self.coins = INITIAL_BUDGET
         self.current_bet = 0.00
         # Experimental session tracking
-        self.bet_counter = 39 # counts from 0 -> increment before each bet to 1..60
+        self.bet_counter = 0  # counts from 0 -> increment before each bet to 1..60
         self.current_reward = 0.00
         self._spinning = False  # True while the spin animation is running
         
@@ -234,6 +235,11 @@ class MainWindow(QWidget):
         Tempo totale animazione = spin_speed * roll_frames = 80ms * 50 = 4000ms = 4 secondi
         FPS = 1000ms / spin_speed = 1000ms / 80ms = 12.5 FPS'''
         self.spin_timer.timeout.connect(self.animate_spin)
+
+        # set in full screen by default but mantain windows OS frame
+        # if you want start a true full screen (without OS frame) 
+        # self.showFullScreen() # instead of self.showMaximized()
+        self.showMaximized()
 
         # ===============================
         #            START BGM
