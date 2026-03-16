@@ -3,3 +3,7 @@ __pycache__/
 
 
 .venv/
+
+build/pyinstaller_work/
+dist/
+*.spec

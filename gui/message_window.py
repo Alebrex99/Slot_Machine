@@ -4,7 +4,8 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer, Qt
 from utils.file_manager import get_path
-from core.constants import MESSAGE_TIMER, MESSAGE_TYPE
+from core.constants import MESSAGE_TIMER # , MESSAGE_TYPE # Variante
+from utils.build_config import MESSAGE_TYPE
 
 # How many seconds before end the MEX2 countdown becomes visible.
 _COUNTDOWN_START = 10

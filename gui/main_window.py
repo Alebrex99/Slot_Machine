@@ -1,8 +1,8 @@
 # OLD: from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout
 # NEW: added QSizePolicy for responsive reel sizing
 from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QSizePolicy
-from PyQt5.QtGui import QPixmap, QIcon, QDoubleValidator
-from PyQt5.QtCore import Qt, QTimer, QSize, QPoint
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtCore import Qt, QTimer
 import random
 import sys
 

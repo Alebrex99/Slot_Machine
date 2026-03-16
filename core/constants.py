@@ -2,8 +2,13 @@
 # Nessun import da altri moduli interni → nessun rischio di circolarità
 
 # -----------------BUILD CONFIG-------------------
+# VARIANTE
 # None = manual mode (RemoteResearcher prompt at startup)
 # "W" / "L" / "E" = fixed build: skips the prompt (Aggiunta in automatico dallo script di build)
+
+# CORRENTE
+# None = manual mode / default fallback when no bundled build config is present
+# "W" / "L" / "E" can also be provided by bundled config/build.env in frozen builds
 BUILD_CONDITION: str | None = None
 
 

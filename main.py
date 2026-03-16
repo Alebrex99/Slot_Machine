@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import QApplication
 from core.remote_researcher import RemoteResearcher
 from gui.main_window import MainWindow
 from core.metrics_logger import MetricsLogger
-from core.constants import BUILD_CONDITION
+# from core.constants import BUILD_CONDITION # Variante
+from utils.build_config import BUILD_CONDITION
 from utils.file_manager import get_path
 
 def load_stylesheet(x):
