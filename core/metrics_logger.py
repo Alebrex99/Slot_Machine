@@ -9,14 +9,42 @@ import csv
 import os
 from datetime import datetime
 from typing import Optional
+from utils.build_config import BUILD_CONDITION, MESSAGE_TYPE
 from utils.file_manager import get_writable_path
 
 # CSV column headers (updated schema)
 # TIMESTAMP | EVENT | BET_NUMBER | BET | CONDITION | RESULT | COIN | MESSAGE
 _CSV_COLUMNS = ["TIMESTAMP", "EVENT", "BET_NUMBER", "BET", "CONDITION", "RESULT", "COIN", "MESSAGE"]
 
-# Default path for the metrics CSV file
-#_CSV_PATH = "data/metrics.csv" # OLD: path realtivo del progetto
+
+def _build_metrics_csv_path() -> str:
+    """Create the next per-participant file path for the current build variant.
+
+    Example output: data/metrics_E_MEX1_3.csv
+    """
+    condition_tag = BUILD_CONDITION if BUILD_CONDITION is not None else "MANUAL"
+    message_tag = MESSAGE_TYPE
+    prefix = f"metrics_{condition_tag}_{message_tag}_"
+    metrics_dir = get_writable_path("data")
+
+    max_index = 0
+    prefix_lower = prefix.lower()
+    try:
+        for name in os.listdir(metrics_dir):
+            name_lower = name.lower()
+            if not name_lower.startswith(prefix_lower) or not name_lower.endswith(".csv"):
+                continue
+
+            index_part = name[len(prefix):-4] # prende la parte numerica
+            if index_part.isdigit():
+                max_index = max(max_index, int(index_part))
+    except FileNotFoundError:
+        # Directory will be created by MetricsLogger.__init__
+        pass
+
+    next_index = max_index + 1
+    return os.path.join(metrics_dir, f"{prefix}{next_index}.csv")
+
 
 class MetricsLogger:
     """Append-only CSV logger for slot machine session and gameplay events.
@@ -27,9 +55,11 @@ class MetricsLogger:
 
     def __init__(self, csv_path: str = None) -> None:
         if csv_path is None:
-            csv_path = get_writable_path("data", "metrics.csv")  # Default path, compatible with builds
+            # csv_path = get_writable_path("data", "metrics.csv") # OLD: fixed path, now dynamic per build/condition/message
+            csv_path = _build_metrics_csv_path()
         self._csv_path = csv_path
-        # Ensure the dist/data/ directory exists (e.g. first run of the frozen exe)
+        
+        # Ensure the dist/data/ directory exists
         os.makedirs(os.path.dirname(self._csv_path), exist_ok=True) # crea la cartella data se non esiste, anche per le build in cui il csv è salvato in dist/data/metrics.csv
         
         self._metrics_enabled: bool = False

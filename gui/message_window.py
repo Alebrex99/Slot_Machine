@@ -7,9 +7,6 @@ from utils.file_manager import get_path
 from core.constants import MESSAGE_TIMER # , MESSAGE_TYPE # Variante
 from utils.build_config import MESSAGE_TYPE
 
-# How many seconds before end the MEX2 countdown becomes visible.
-_COUNTDOWN_START = 10
-
 
 # OLD: class MessageWindow(QDialog):
 
@@ -86,29 +83,37 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         bottom.setContentsMargins(0, 10, 0, 20)
         bottom.setSpacing(20)
 
-        self.countdown_label = QLabel("")
+        self.countdown_label = QLabel("30")
         self.countdown_label.setObjectName("countdown_label")
         self.countdown_label.setAlignment(Qt.AlignCenter)
 
         self.close_btn = QPushButton("CLOSE")
         self.close_btn.setObjectName("close_btn")
-        self.close_btn.setEnabled(False)
         self.close_btn.clicked.connect(self.on_close)
 
         bottom.addWidget(self.countdown_label)
         bottom.addWidget(self.close_btn)
         mex_layout.addWidget(self.bottom_container, 0, Qt.AlignHCenter)  # OLD: layout.addLayout(bottom)
         # --------------------------------------------------------------------------------
-
         # START
-        self.bottom_container.setVisible(False)
         self._render_image()
         # Start the 30-second countdown
         self._elapsed = 0
         self._timer = QTimer()
-        self._timer.timeout.connect(self._tick)
-        self._timer.start(1000)
 
+        # MEX1: abilita la chiusura subito senza timer
+        # MEX2: avviato un timer di 30 secondi, il pulsante close si sblocca solo alla fine del timer
+        if MESSAGE_TYPE == "MEX2":
+            self.close_btn.setEnabled(False)
+            self.countdown_label.setVisible(True)
+            # Start the 30-second countdown
+            self._timer.timeout.connect(self._tick)
+            self._timer.start(1000)
+        else:
+            self.close_btn.setEnabled(True)
+            self.countdown_label.setVisible(False)
+            self._timer_done = True
+        
 
     def _sync_to_parent(self):
         """Resize the overlay to fill the current parent client area."""
@@ -141,10 +146,7 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         
         self._elapsed += 1
         remaining = MESSAGE_TIMER - self._elapsed
-
-        if MESSAGE_TYPE == "MEX2" and remaining <= _COUNTDOWN_START:
-            self.bottom_container.setVisible(True)
-            self.countdown_label.setText(str(max(remaining, 0)))
+        self.countdown_label.setText(str(max(remaining, 0)))
 
         if self._elapsed >= MESSAGE_TIMER:
             self._timer.stop()
@@ -155,7 +157,8 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
 
     def on_close(self):
         """Called by the CLOSE button after the timer expires."""
-        self._timer.stop()
+        if not self._timer_done:
+            self._timer.stop()
         if not self._callback_fired:
             self._callback_fired = True
             self.open_message_callback()
@@ -167,7 +170,7 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         if not self._timer_done:
             event.ignore()
             return
-        self._timer.stop()
+        # self._timer.stop()
         if not self._callback_fired:
             self._callback_fired = True
             self.open_message_callback()

@@ -1,9 +1,9 @@
 """
-Creato così che dopo aver eseguito il build_all.py, ogni build avrà un file config/build.env incluso nel bundle, 
+Mentre avviene l'esecuzione di build_all.py, runtime ogni build avrà un file config/build.env incluso nel bundle, 
 con dentro la config specifica di quella build (BUILD_CONDITION e MESSAGE_TYPE).
-Cosa contiene dunque un .exe: a runtime eseguirà internamente build_config.py per leggere l'.env bundled assieme all'intera app 
-    Returns:
-        _type_: _description_
+- quando eseguo la build_all.py -> preparazione .env
+- esecuzione pyinstaller -> avvia main.py -> partendo dagli import in main.py
+- la catena di import arriva a from utils.build_config -> Python carica ed esegue il codice che prepara solo BUILD_CONDITION e MESSAGE_TYPE leggendo .env
 """
 
 import os
@@ -19,6 +19,19 @@ _VALID_MESSAGE_TYPES = {"MEX1", "MEX2"}
 
 
 def _read_env_file() -> dict[str, str]:
+    """
+    Read environment variables from a configuration file.
+    Parses a .env file and extracts key-value pairs, ignoring comments and empty lines.
+    Values are stripped of surrounding quotes (both single and double) and whitespace.
+    Returns:
+        dict[str, str]: A dictionary containing environment variable key-value pairs.
+                       Returns an empty dictionary if the file does not exist.
+    File Format:
+        - Lines starting with '#' are treated as comments and ignored
+        - Empty lines are ignored
+        - Lines must contain '=' to be parsed
+        - Format: KEY=VALUE or KEY="VALUE" or KEY='VALUE'
+    """
     env_path = get_path(*_BUILD_ENV_PATH)
 
     if not os.path.exists(env_path):

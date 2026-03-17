@@ -56,7 +56,7 @@ class MainWindow(QWidget):
         self.coins = INITIAL_BUDGET
         self.current_bet = 0.00
         # Experimental session tracking
-        self.bet_counter = 0  # counts from 0 -> increment before each bet to 1..60
+        self.bet_counter = 39  # counts from 0 -> increment before each bet to 1..60
         self.current_reward = 0.00
         self._spinning = False  # True while the spin animation is running
         
@@ -238,8 +238,8 @@ class MainWindow(QWidget):
 
         # set in full screen by default but mantain windows OS frame
         # if you want start a true full screen (without OS frame) 
-        # self.showFullScreen() # instead of self.showMaximized()
-        self.showMaximized()
+        self.showFullScreen() # instead of self.showMaximized()
+        #self.showMaximized()
 
         # ===============================
         #            START BGM
@@ -508,7 +508,7 @@ class MainWindow(QWidget):
   
         # GESTIONE DEL MESSAGGIO
         # user in bet 40 (ultima di DURING) -> clicca spin -> risultato mostrato
-        # alla fine lo spin button viene, temporalmente, sbilitato a fare un altra cosa: open_message()
+        # alla fine lo spin button viene, temporalmente, abilitato a fare un altra cosa: on_message()
         if self.bet_counter == MESSAGE_COUNTER_POINT:  # punto di trigger del messaggio, fine fase DURING
             # viene modificato
             print("TRIGGER MESSAGE SETTED for next bet")
@@ -519,7 +519,7 @@ class MainWindow(QWidget):
         # Old location (on_spin before processing) required a 61st press.
         if self.bet_counter >= TOTAL_SESSION_BETS:
             self.spin_btn.setDisabled(True)
-            QTimer.singleShot(1500, self.close)
+            QTimer.singleShot(3000, self.close)
 
 
     #--------------------------------------------------
