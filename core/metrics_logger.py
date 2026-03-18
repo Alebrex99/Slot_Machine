@@ -27,22 +27,27 @@ def _build_metrics_csv_path() -> str:
     prefix = f"metrics_{condition_tag}_{message_tag}_"
     metrics_dir = get_writable_path("data")
 
-    max_index = 0
-    prefix_lower = prefix.lower()
+    last_index = 0
+    prefix_lower = prefix.lower() # es. "metrics_e_mex1_"
+    # il prefisso esiste già? 
+    # se sì: aggiorno last_index rispetto all'ultimo file presente
+    # se no: last_index rimane 0, azzerato ad ogni build
     try:
-        for name in os.listdir(metrics_dir):
-            name_lower = name.lower()
+        for name in os.listdir(metrics_dir): # capisco se ci sono già estraendo i nomi dei file in Data/
+            name_lower = name.lower() #es. "metrics_e_mex1_2.csv"
+            # Per ogni file in Data/, se il file non c'entra o non è un csv, salto al prossimo
             if not name_lower.startswith(prefix_lower) or not name_lower.endswith(".csv"):
                 continue
-
-            index_part = name[len(prefix):-4] # prende la parte numerica
+            
+            # Se viene trovato un file del tipo della build in corso, es. metrics_e_mex1_2.csv
+            index_part = name[len(prefix):-4] # prende la parte numerica, es. 2
             if index_part.isdigit():
-                max_index = max(max_index, int(index_part))
+                last_index = max(last_index, int(index_part)) # aggiorno l'ultimo indice trovato, es. da 0 a 2
     except FileNotFoundError:
         # Directory will be created by MetricsLogger.__init__
         pass
 
-    next_index = max_index + 1
+    next_index = last_index + 1
     return os.path.join(metrics_dir, f"{prefix}{next_index}.csv")
 
 

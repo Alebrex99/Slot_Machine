@@ -56,7 +56,7 @@ class MainWindow(QWidget):
         self.coins = INITIAL_BUDGET
         self.current_bet = 0.00
         # Experimental session tracking
-        self.bet_counter = 39  # counts from 0 -> increment before each bet to 1..60
+        self.bet_counter = 0  # counts from 0 -> increment before each bet to 1..60
         self.current_reward = 0.00
         self._spinning = False  # True while the spin animation is running
         
