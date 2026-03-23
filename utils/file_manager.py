@@ -19,7 +19,7 @@ def get_path(*paths) -> str:
         base_dir = sys._MEIPASS
         print('running in a PyInstaller bundle')
     else:
-        base_dir = os.path.dirname(os.path.dirname(__file__))  # project root
+        base_dir = os.path.dirname(os.path.dirname(__file__))  # project root, __file__ = utils/file_manager.py -> dirname 1 = utils, dirname 2 = Slot_Machine
     return os.path.join(base_dir, *paths)
 
 

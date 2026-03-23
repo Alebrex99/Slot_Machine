@@ -1,7 +1,8 @@
-"""
-Mentre avviene l'esecuzione di build_all.py, runtime ogni build avrà un file config/build.env incluso nel bundle, 
-con dentro la config specifica di quella build (BUILD_CONDITION e MESSAGE_TYPE).
-- quando eseguo la build_all.py -> preparazione .env
+""" 
+1) Sia mentre avviene l'esecuzione di build_all.py dove runtime ogni build avrà un file config/build.env incluso nel bundle, 
+con dentro la config specifica di quella build (BUILD_CONDITION e MESSAGE_TYPE), 
+2) sia durante l'esecuzione via codice da main.py
+- quando eseguo la build_all.py / da codice -> il build_config prepara il file .env
 - esecuzione pyinstaller -> avvia main.py -> partendo dagli import in main.py
 - la catena di import arriva a from utils.build_config -> Python carica ed esegue il codice che prepara solo BUILD_CONDITION e MESSAGE_TYPE leggendo .env
 """
