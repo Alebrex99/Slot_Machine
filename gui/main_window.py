@@ -542,6 +542,8 @@ class MainWindow(QWidget):
         # reimpostare lo spin button collegandolo nuovamente a on_spin() e non più a on_message()
         play_sfx("click.wav")
         self.spin_btn.clicked.disconnect()
+
+        # AGGIUNGERE UNA CHIAMATA PER APRIRE LA FINESTRA DEL LINK ASSOCIATO 
         self.spin_btn.clicked.connect(self.on_spin)
     
     

@@ -2,7 +2,8 @@
 1) Sia mentre avviene l'esecuzione di build_all.py dove runtime ogni build avrà un file config/build.env incluso nel bundle, 
 con dentro la config specifica di quella build (BUILD_CONDITION e MESSAGE_TYPE), 
 2) sia durante l'esecuzione via codice da main.py
-- quando eseguo la build_all.py / da codice -> il build_config prepara il file .env
+- quando eseguo la build_all.py / da codice -> il build_config legge il file .env
+- se sono da main.py, quindi non da build -> il .env non c'è e quindi build_config setta BUILD_CONDITION e MESSAGE_TYPE a None, che è il comportamento di default per la modalità dev (manuale), in attesa di impostare tutto da linea di comando
 - esecuzione pyinstaller -> avvia main.py -> partendo dagli import in main.py
 - la catena di import arriva a from utils.build_config -> Python carica ed esegue il codice che prepara solo BUILD_CONDITION e MESSAGE_TYPE leggendo .env
 """

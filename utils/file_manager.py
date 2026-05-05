@@ -33,12 +33,12 @@ def get_writable_path(*paths) -> str:
     
     se l'app è bundled (è buildata), il MEIPASS è temporaneo e poi cancellato.
     Allora devo salvare i file .csv nella directory sys.executable, usata quando ho le build.
-    che punta all'eseguibile (Slot_Machine.exe) e quindi alla cartella in cui si trova (dist). 
+    che punta all'eseguibile (Slot_Machine.exe) e quindi alla cartella in cui si trova attualmente l'esecguibile. 
     - Se app è bundled, le metriche vengono salvate in una posizione persistente (dist/metrics.csv) e non nel MEIPASS temporaneo. 
     - Se invece non è bundled, rimane tutto come prima, con i file salvati nella directory del progetto.
     """
     if getattr(sys, 'frozen', False):
-        base_dir = os.path.dirname(sys.executable) # base_dir = /dist, qui messi: Slot_Machine.exe, metrics.csv
+        base_dir = os.path.dirname(sys.executable) # base_dir = dove si trova l'eseguibile, qui messi: Slot_Machine.exe, metrics.csv
     else:
         base_dir = os.path.dirname(os.path.dirname(__file__))
     return os.path.join(base_dir, *paths)
