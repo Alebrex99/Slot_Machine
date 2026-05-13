@@ -7,3 +7,7 @@ __pycache__/
 build/pyinstaller_work/
 dist/
 *.spec
+
+# Ignorare claude
+.claude/
+CLAUDE.*

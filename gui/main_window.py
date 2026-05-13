@@ -70,7 +70,7 @@ class MainWindow(QWidget):
         # NEW: tracks the currently displayed symbol on each reel (needed by resizeEvent to rescale)
         self.reel_symbols = ["seven", "seven", "seven"]
         # NEW: music state flag — True = playing; drives toggle_music() and initial button label
-        self._music_on = False
+        self._music_on = True
 
         # ===============================
         #          LOAD ASSETS
