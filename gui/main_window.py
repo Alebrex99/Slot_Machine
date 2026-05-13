@@ -155,7 +155,7 @@ class MainWindow(QWidget):
             # kept at the window-derived size without any sizeHint feedback loop.
             reel.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        self.spin_btn = QPushButton("GIOCA")
+        self.spin_btn = QPushButton("PLAY")
         self.spin_btn.setObjectName("spin_btn")
         self.spin_btn.setEnabled(False)
         self.spin_btn.clicked.connect(self.on_spin)
@@ -400,7 +400,7 @@ class MainWindow(QWidget):
         self.spin_btn.setDisabled(True)
         
         if self.current_bet <= 0 or self.current_bet > self.coins:
-            self.watermark.setText("Puntata non valida!")
+            self.watermark.setText("Invalid bet!")
             self.spin_btn.setDisabled(False)
             return
 
@@ -502,7 +502,7 @@ class MainWindow(QWidget):
 
         if reward > 0:
             play_sfx("win.wav")
-            self.watermark.setText(f"Hai vinto +{reward:.2f}")
+            self.watermark.setText(f"You won +{reward:.2f}")
         else:
             self.watermark.setText("Try again!")
   

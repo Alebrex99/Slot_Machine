@@ -9,7 +9,7 @@ initial_budget_before, initial_budget_during, initial_budget_after = None, None,
 condition = "EQUAL"  # default condition, can be updated by researcher input
 
 
-# ----------------FUNCTIOS---------------
+# ----------------FUNCTIONS---------------
 def update_condition(input_condition: str) -> None:
     global condition
     condition = input_condition
