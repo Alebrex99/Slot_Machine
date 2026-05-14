@@ -1,11 +1,12 @@
 """ 
 1) Sia mentre avviene l'esecuzione di build_all.py dove runtime ogni build avrà un file config/build.env incluso nel bundle, 
 con dentro la config specifica di quella build (BUILD_CONDITION e MESSAGE_TYPE), 
-2) sia durante l'esecuzione via codice da main.py
-- quando eseguo la build_all.py / da codice -> il build_config legge il file .env
-- se sono da main.py, quindi non da build -> il .env non c'è e quindi build_config setta BUILD_CONDITION e MESSAGE_TYPE a None, che è il comportamento di default per la modalità dev (manuale), in attesa di impostare tutto da linea di comando
 - esecuzione pyinstaller -> avvia main.py -> partendo dagli import in main.py
 - la catena di import arriva a from utils.build_config -> Python carica ed esegue il codice che prepara solo BUILD_CONDITION e MESSAGE_TYPE leggendo .env
+2) sia durante l'esecuzione via codice da main.py
+- mentre quando eseguo la build_all.py / da codice -> il build_config legge il file .env
+- se invece sono da main.py, quindi non da build -> il .env non c'è e quindi build_config setta BUILD_CONDITION e MESSAGE_TYPE a DEFAULT, che è il comportamento di default per la modalità dev (manuale), in attesa di impostare tutto da linea di comando
+
 """
 
 import os
@@ -17,7 +18,7 @@ from utils.file_manager import get_path
 
 _BUILD_ENV_PATH = ("config", "build.env")
 _VALID_BUILD_CONDITIONS = VALID_CONDITIONS
-_VALID_MESSAGE_TYPES = {"MEX1", "MEX2"}
+_VALID_MESSAGE_TYPES = {"MEX1", "MEX2", None}
 
 
 def _read_env_file() -> dict[str, str]:
@@ -61,6 +62,9 @@ _env_values = _read_env_file()
 
 _build_condition = _env_values.get("BUILD_CONDITION", DEFAULT_BUILD_CONDITION)
 _message_type = _env_values.get("MESSAGE_TYPE", DEFAULT_MESSAGE_TYPE)
+if _message_type == "None":
+    _message_type = None
+
 
 BUILD_CONDITION = (
     _build_condition

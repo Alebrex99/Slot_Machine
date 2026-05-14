@@ -33,7 +33,7 @@ def calculate_reward(budget_before_spin, current_bet_counter, current_bet):
     if current_bet_counter in PHASES["PHASE_BEFORE"]:
         if initial_budget_before is None:
             initial_budget_before = INITIAL_BUDGET
-        print(f"FASE BEFORE {current_bet_counter}: initial budget: {initial_budget_before:.2f}, budget: {budget_before_spin:.2f}, bet: {current_bet}")
+        print(f"FASE BEFORE {current_bet_counter}: initial budget: {initial_budget_before:.2f}, budget: {budget_before_spin:.2f}, budget after spin: {budget_before_spin - current_bet:.2f}, bet: {current_bet}")
 
         win = BEFORE_AFTER_PHASE[current_bet_counter]
         if win:
@@ -47,7 +47,7 @@ def calculate_reward(budget_before_spin, current_bet_counter, current_bet):
     if current_bet_counter in PHASES["PHASE_DURING"]:
         if initial_budget_during is None:
             initial_budget_during = budget_before_spin # il budget iniziale della fase during è quello ottenuto alla fine della fase before
-        print(f"FASE DURING E/W/L {current_bet_counter}: initial budget: {initial_budget_during:.2f}, condizione {condition}, budget: {budget_before_spin:.2f}, bet: {current_bet}")
+        print(f"FASE DURING E/W/L {current_bet_counter}: initial budget: {initial_budget_during:.2f}, condizione {condition}, budget: {budget_before_spin:.2f}, budget after spin: {budget_before_spin - current_bet:.2f}, bet: {current_bet}")
         # EQUAL
         if condition == "EQUAL":
             win = DURING_PHASE_EQUAL[current_bet_counter]
@@ -78,7 +78,7 @@ def calculate_reward(budget_before_spin, current_bet_counter, current_bet):
         # uguale alla fase before: arrivo alla 41 inclusa
         if initial_budget_after is None:
             initial_budget_after = budget_before_spin # il budget iniziale della fase after è quello ottenuto alla fine della fase during
-        print(f"FASE AFTER {current_bet_counter}: initial budget: {initial_budget_after:.2f}, budget: {budget_before_spin:.2f}, bet: {current_bet}")
+        print(f"FASE AFTER {current_bet_counter}: initial budget: {initial_budget_after:.2f}, budget: {budget_before_spin:.2f}, budget after spin: {budget_before_spin - current_bet:.2f}, bet: {current_bet}")
         
         win = BEFORE_AFTER_PHASE[current_bet_counter - 40]  # usa la stessa mappa della fase before, ma con indice corretto (1-20)
         if win:

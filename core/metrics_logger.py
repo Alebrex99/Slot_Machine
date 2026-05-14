@@ -24,6 +24,8 @@ def _build_metrics_csv_path() -> str:
     """
     condition_tag = BUILD_CONDITION if BUILD_CONDITION is not None else "MANUAL"
     message_tag = MESSAGE_TYPE
+    if message_tag is None:
+        message_tag = "NO_MEX"
     prefix = f"metrics_{condition_tag}_{message_tag}_"
     metrics_dir = get_writable_path("data")
 

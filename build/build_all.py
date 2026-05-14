@@ -5,9 +5,9 @@ BASE_ENV = ROOT / "config"
 BUILD_ENV = BASE_ENV / "build.env"
 
 BUILDS = [
-    ("W", "MEX1"), ("W", "MEX2"),
-    ("L", "MEX1"), ("L", "MEX2"),
-    ("E", "MEX1"), ("E", "MEX2"),
+    ("W", "MEX1"), ("W", "MEX2"), ("W", None),
+    ("L", "MEX1"), ("L", "MEX2"), ("L", None),
+    ("E", "MEX1"), ("E", "MEX2"), ("E", None),
 ]
 
 
@@ -22,7 +22,8 @@ try:
             f"MESSAGE_TYPE={mex}\n",
             encoding="utf-8",
         )
-        name = f"SlotMachine_{condition}_{mex}" # es. SlotMachine_W_MEX1.exe
+        name_tag = mex if mex is not None else "NO_MEX"
+        name = f"SlotMachine_{condition}_{name_tag}" # es. SlotMachine_W_MEX1.exe
         # sostituisce i vecchi os.system() and spawn(), chiama un processo nuovo
         subprocess.run([                            
             "pyinstaller",

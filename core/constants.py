@@ -22,8 +22,11 @@ PHASE_LENGTH: int = 20
 TOTAL_TESTS: int = 50
 MESSAGE_COUNTER_POINT = 40  # punto in cui mostrare il messaggio a metà sessione (dopo 40 scommesse, all'inizio della fase AFTER)
 MESSAGE_TIMER = 60          # durata totale messaggio
-MESSAGE_TYPE: str = "MEX2"  # "MEX1" → immagine senza conto alla rovescia
+MESSAGE_TYPE: str | None = "MEX1"  # "MEX1" → immagine senza conto alla rovescia
                             # "MEX2" → conto alla rovescia di 30 secondi
+                            # None -> nessun mex
+SURVEY_COUNTER_POINT = 40 # se ho messaggio: esattamente quando chiudo il messaggio, 
+                          # se non ho messaggio: semplicemente al suo posto al nuovo click di START (come è presente l'attuale connessione al messaggio)
 
 # ---------------REMOTE RESEARCHER CONSTANTS-----------------
 VALID_CONDITIONS = {

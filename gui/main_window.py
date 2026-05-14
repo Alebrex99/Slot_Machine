@@ -14,8 +14,8 @@ from gui.redeem_dialog import RedeemDialog
 from core.metrics_logger import MetricsLogger   # ← NEW
 from utils.file_manager import get_path
 from PyQt5.QtWidgets import QApplication
-from core.constants import INITIAL_BUDGET, MESSAGE_COUNTER_POINT, MIN_BET, MAX_BET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH, TOTAL_TESTS, VALID_CONDITIONS
- 
+from core.constants import INITIAL_BUDGET, MESSAGE_COUNTER_POINT, SURVEY_COUNTER_POINT, MIN_BET, MAX_BET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH, TOTAL_TESTS, VALID_CONDITIONS
+from utils.build_config import MESSAGE_TYPE
 # FOR TESTING
 from core.remote_researcher import RemoteResearcher
 
@@ -56,7 +56,7 @@ class MainWindow(QWidget):
         self.coins = INITIAL_BUDGET
         self.current_bet = 0.00
         # Experimental session tracking
-        self.bet_counter = 0  # counts from 0 -> increment before each bet to 1..60
+        self.bet_counter = 39  # counts from 0 -> increment before each bet to 1..60
         self.current_reward = 0.00
         self._spinning = False  # True while the spin animation is running
         
@@ -427,6 +427,11 @@ class MainWindow(QWidget):
         self._anim_size = self._compute_reel_size()
         self._update_reels()  # draw initial random symbols at the correct size before starting animation
         self._spinning = True  # BUG3: block validate_bet from re-enabling GIOCA during animation
+        '''
+        allo start (spin_timer.start(self.spin_speed)) viene avviato un timer che ogni spin_speed ms (80 ms) chiama la funzione animate_spin.
+        ogni frame_speeds (80 ms) viene richiamato il signal (animate_spin, la funzione costantemente reinvocata).
+        Tempo totale animazione = spin_speed * roll_frames = 80ms * 50 = 4000ms = 4 secondi
+        FPS = 1000ms / spin_speed = 1000ms / 80ms = 12.5 FPS'''
         self.spin_timer.start(self.spin_speed)
 
     def animate_spin(self):
@@ -507,13 +512,24 @@ class MainWindow(QWidget):
             self.watermark.setText("Try again!")
   
         # GESTIONE DEL MESSAGGIO
-        # user in bet 40 (ultima di DURING) -> clicca spin -> risultato mostrato
+        # user è in 39, clicca play e va in bet 40 (ultima di DURING) -> ora clicca spin -> risultato mostrato (stop avanzamento bet)
         # alla fine lo spin button viene, temporalmente, abilitato a fare un altra cosa: on_message()
-        if self.bet_counter == MESSAGE_COUNTER_POINT:  # punto di trigger del messaggio, fine fase DURING
+        if self.bet_counter == MESSAGE_COUNTER_POINT and MESSAGE_TYPE is not None:  # punto di trigger del messaggio, fine fase DURING
             # viene modificato
-            print("TRIGGER MESSAGE SETTED for next bet")
+            print(f"MESSAGE SETTED for next time you press START (spin) (current bet_number: {self.bet_counter})")
             self.spin_btn.clicked.disconnect()
             self.spin_btn.clicked.connect(self.on_message)
+            # Quando messaggio chiuso -> open_message_callback(): 1. apre la survey Open_survey_window, poi ricollega lo spin button a on_spin() per continuare la sessione normalmente (siamo sempre nella 40, quindi cliccando ora si va nella 41)
+        
+        # GESTIONE SENZA MESSAGGIO
+        # se non avevo il messaggio -> solo survey nella 40-esima BET
+        if self.bet_counter == SURVEY_COUNTER_POINT and MESSAGE_TYPE is None: # se non ho messaggio, alla 40-esima bet mostro direttamente la survey, senza passare per il messaggio
+            print(f"NO MESSAGE + SURVEY SETTED for next time you press START (spin) (current bet_number: {self.bet_counter})")
+            # AGGIUNGERE UNA CHIAMATA PER APRIRE LA FINESTRA DEL LINK ASSOCIATO ALLA SURVEY
+            # posso collegare allo spin_btn una funzione che apre la finestra del link, e poi ricollegarlo a on_spin dopo la chiusura della finestra (come per il messaggio)
+            self.spin_btn.clicked.disconnect()
+            self.spin_btn.clicked.connect(self.open_survey_window) # riutilizzo la stessa callback della chiusura del messagio per aprire il link una sola volta: sia se ho il messaggio che se non lo ho
+
 
         # FIX: auto-close AFTER bet 60 is fully processed and logged.
         # Old location (on_spin before processing) required a 61st press.
@@ -540,12 +556,20 @@ class MainWindow(QWidget):
     def open_message_callback(self):
         # appena la finestra si chiude
         # reimpostare lo spin button collegandolo nuovamente a on_spin() e non più a on_message()
-        play_sfx("click.wav")
-        self.spin_btn.clicked.disconnect()
-
-        # AGGIUNGERE UNA CHIAMATA PER APRIRE LA FINESTRA DEL LINK ASSOCIATO 
-        self.spin_btn.clicked.connect(self.on_spin)
+        # play_sfx("click.wav")        
+        # Prima apro la survey:
+        self.open_survey_window()
+        # self.spin_btn.clicked.connect(self.on_spin) # fatto diretto in open_survey_window() 
     
+    def open_survey_window(self):
+        play_sfx("click.wav")
+        # Apri il link della survey in una nuova finestra del browser
+        import webbrowser
+        webbrowser.open("https://polimi.eu.qualtrics.com/jfe/form/SV_8BA0BlaJYCIpEGi")  # Sostituisci con il link reale della survey
+        # Dopo aver aperto la survey, ricollega lo spin button a on_spin() per continuare la sessione normalmente
+        # preparando in background la slot machine (mentre utente vede la survey)
+        self.spin_btn.clicked.disconnect()
+        self.spin_btn.clicked.connect(self.on_spin)
     
     def redeem_code_callback(self, code: str) -> int:
         coins_to_add = validate_redeem_code(code)

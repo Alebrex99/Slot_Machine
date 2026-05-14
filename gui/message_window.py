@@ -64,7 +64,9 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         # Image fills all available vertical space (stretch=1).
         self.mex_label = QLabel() # Figlio di Layout
         self.mex_label.setObjectName("mex_label")
-        self.mex_label.setAlignment(Qt.AlignCenter)
+        # AlignTop keeps the pixmap pinned to the top of mex_label, leaving the
+        # bottom area free for the countdown overlay (positioned by mex_layout).
+        self.mex_label.setAlignment(Qt.AlignHCenter | Qt.AlignTop) # self.mex_label.setAlignment(Qt.AlignCenter)
         #self.mex_label.setStyleSheet("background-color: black;")
         layout.addWidget(self.mex_label, 1)
 
@@ -115,6 +117,18 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
             self._timer_done = True
         
 
+    def showEvent(self, event):
+        """Re-render the pixmap once the widget is actually shown.
+
+        The initial _render_image() call in __init__ runs before the layout has
+        assigned mex_label its real size, so without this override the pixmap
+        stays at its pre-layout (tiny) size. singleShot(0) defers until after
+        the layout has propagated, then scales to the now-correct dimensions.
+        """
+        super().showEvent(event)
+        QTimer.singleShot(0, self._render_image)
+
+
     def _sync_to_parent(self):
         """Resize the overlay to fill the current parent client area."""
         p = self.parent()
@@ -127,12 +141,24 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
 
 
     def _render_image(self):
+        # Reserve vertical space at the bottom for the countdown+CLOSE overlay so
+        # the image doesn't extend behind it. sizeHint() adapts automatically if
+        # QSS changes the font size of countdown_label / close_btn.
+        w = self.mex_label.width()
+        h = self.mex_label.height()
+        reserved = self.bottom_container.sizeHint().height()
+        target_h = max(1, h - reserved)
+
+        if w > 0 and target_h > 0 and not self._pixmap.isNull():
+            self.mex_label.setPixmap(self._pixmap.scaled(w, target_h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+    '''def _render_image(self):
         w = self.mex_label.width()
         h = self.mex_label.height()
         if w > 0 and h > 0 and not self._pixmap.isNull():
             self.mex_label.setPixmap(
                 self._pixmap.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            )
+            )'''
 
 
     def _tick(self):
