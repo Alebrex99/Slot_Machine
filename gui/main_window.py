@@ -69,7 +69,7 @@ class MainWindow(QWidget):
             self._session_end = TOTAL_SESSION_BETS
         self.current_reward = 0.00
         self._spinning = False  # True while the spin animation is running
-        
+                
         # OLD: self.spin_cost = 5   (unused, removed)
         self.symbol_size = 400  #(replaced by dynamic _get_symbol_size())
         self.spin_timer = QTimer()
@@ -147,7 +147,7 @@ class MainWindow(QWidget):
 
         # self.watermark = QLabel("UPV Slot Machine")
         # WITH TEST BUILD
-        self.watermark = QLabel("THIS IS A TEST" if IS_TEST_BUILD else "UPV Slot Machine")
+        self.watermark = QLabel("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
         self.watermark.setAlignment(Qt.AlignCenter)
         self.watermark.setObjectName("watermark")
         
@@ -172,11 +172,11 @@ class MainWindow(QWidget):
         self.spin_btn.setEnabled(False)
         self.spin_btn.clicked.connect(self.on_spin)
 
-        # MUSIC CONTROLS
-        self.music_btn = QPushButton("Music: ON")
-        self.music_btn.setObjectName("music_btn")
-        self.music_btn.setFixedWidth(300)
-        self.music_btn.setEnabled(True)
+        # MUSIC CONTROLS - COMMENTED FOR EXPERIMENTS
+        #self.music_btn = QPushButton("Music: ON")
+        #self.music_btn.setObjectName("music_btn")
+        #self.music_btn.setFixedWidth(300)
+        #self.music_btn.setEnabled(True)
         # self.music_btn.clicked.connect(self.toggle_music) # for experiments user cannot toggle music
 
         # ===============================
@@ -219,7 +219,9 @@ class MainWindow(QWidget):
         # NEW: Bottom Layout — same pattern as top (stretch=1 | centre | stretch=1)
         bottom = QHBoxLayout()
         bottom.setAlignment(Qt.AlignBottom)                  # NEW: bottom-align so button stays at the bottom
-        bottom.addWidget(self.music_btn, 1, Qt.AlignLeft)    # NEW: stretch=1, pinned left  — mirrors addLayout(bet_controls, 1);
+        # se vuoi riattivare il pulsante musica commenta addStretch qui sotto
+        bottom.addStretch(1)                                 # NEW: left stretch claims equal share
+        #bottom.addWidget(self.music_btn, 1, Qt.AlignLeft)    # NEW: stretch=1, pinned left  — mirrors addLayout(bet_controls, 1);
         bottom.addWidget(self.spin_btn, 0, Qt.AlignCenter)   # NEW: stretch=0, centred      — mirrors addWidget(watermark, 0, AlignCenter)
         bottom.addStretch(1)                                 # NEW: right stretch mirrors left → spin_btn truly centred -> aggiunto per sostiuire il terzo ipotetico elemento a destra
         
@@ -408,9 +410,9 @@ class MainWindow(QWidget):
         
         play_sfx("click.wav")
 
-        #self.watermark.setText("UPV Slot Machine")
+        #self.watermark.setText("Slot Machine")
         # WITH TEST BUILD
-        self.watermark.setText("THIS IS A TEST" if IS_TEST_BUILD else "UPV Slot Machine")
+        self.watermark.setText("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
         self.spin_btn.setDisabled(True)
         
         if self.current_bet <= 0 or self.current_bet > self.coins:
@@ -577,14 +579,58 @@ class MainWindow(QWidget):
     
     def open_survey_window(self):
         play_sfx("click.wav")
+        # Lock the game window to prevent user interaction
+        self.spin_btn.setDisabled(True)
+        self.bet_display.setDisabled(True)    # ← Lock bet input
+        self.bet_up_btn.setDisabled(True)     # ← Lock bet up button
+        self.bet_down_btn.setDisabled(True)   # ← Lock bet down button
+        self.toggle_music()  # Spegnere la musica
+        self.watermark.setText("📋 Survey opened in browser. Please complete it.")
+        
+        # POSSIBILITY 1
+        # Open survey in system's default browser (maximized)
         # Apri il link della survey in una nuova finestra del browser
-        import webbrowser
+        '''import webbrowser
+        import subprocess
+        import platform
+        survey_url = "https://polimi.eu.qualtrics.com/jfe/form/SV_8BA0BlaJYCIpEGi"
         webbrowser.open("https://polimi.eu.qualtrics.com/jfe/form/SV_8BA0BlaJYCIpEGi")  # Sostituisci con il link reale della survey
+        # Try to maximize browser window based on OS
+        try:
+            if platform.system() == "Windows":
+                # Windows: use wmctrl or pygetwindow to maximize
+                # For simplicity, we send F11 to browser (full screen toggle)
+                import time
+                time.sleep(0.5)  # Give browser time to open
+                subprocess.Popen("powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('{F11}')\"")
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.Popen(["osascript", "-e", "tell application \"System Events\" to keystroke \"f\" using command down"])
+            elif platform.system() == "Linux":
+                subprocess.Popen(["xdotool", "search", "--name", ".", "windowactivate", "key", "F11"])
+        except Exception as e:
+            print(f"[Warning] Could not maximize browser: {e}")'''
+        
+        # POSSIBILITY 2
+        import webbrowser
+        survey_url = "https://polimi.eu.qualtrics.com/jfe/form/SV_8BA0BlaJYCIpEGi"
+        webbrowser.open_new_tab(survey_url)
+        
         # Dopo aver aperto la survey, ricollega lo spin button a on_spin() per continuare la sessione normalmente
-        # preparando in background la slot machine (mentre utente vede la survey)
         self.spin_btn.clicked.disconnect()
         self.spin_btn.clicked.connect(self.on_spin)
+        # Schedule re-enable after a delay (user completes survey during this time)
+        QTimer.singleShot(30000, self._unlock_game_window)
     
+    def _unlock_game_window(self):
+        """Re-enable all game controls after survey timeout."""
+        self.spin_btn.setDisabled(False)
+        self.bet_display.setDisabled(False)    # ← Unlock bet input
+        self.bet_up_btn.setDisabled(False)     # ← Unlock bet up button
+        self.bet_down_btn.setDisabled(False)   # ← Unlock bet down button
+        self.toggle_music()  # Riaccendere la musica
+        self.watermark.setText("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
+        self.validate_bet()  # Re-validate in case bet state changed
+        
     def redeem_code_callback(self, code: str) -> int:
         coins_to_add = validate_redeem_code(code)
         if coins_to_add:
@@ -601,11 +647,11 @@ class MainWindow(QWidget):
         if self._music_on:
             stop_bgm()
             self._music_on = False
-            self.music_btn.setText("Music: OFF")
+            #self.music_btn.setText("Music: OFF")
         else:
             play_bgm("bgm.mp3")
             self._music_on = True
-            self.music_btn.setText("Music: ON")
+            #self.music_btn.setText("Music: ON")
 
 
     # CLOSE EVENT: CATCHED WHEN SELF.CLOSE() IS CALLED

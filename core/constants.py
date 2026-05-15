@@ -25,7 +25,7 @@ MESSAGE_COUNTER_POINT = 40  # punto in cui mostrare il messaggio a metà session
 MESSAGE_TIMER = 60          # durata totale messaggio
 # NON IMPORTARE DA COSTANTS.PY! ma da utils.build_config.py
 MESSAGE_TYPE: str | None = "MEX1"   # "MEX1" → immagine senza conto alla rovescia
-                                    # "MEX2" → conto alla rovescia di 30 secondi
+                                    # "MEX2" → conto alla rovescia di 60 secondi
                                     # None -> nessun mex
 SURVEY_COUNTER_POINT = 40 # se ho messaggio: esattamente quando chiudo il messaggio, 
                           # se non ho messaggio: semplicemente al suo posto al nuovo click di START (come è presente l'attuale connessione al messaggio)
