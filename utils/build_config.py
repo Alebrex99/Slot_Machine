@@ -65,6 +65,12 @@ _message_type = _env_values.get("MESSAGE_TYPE", DEFAULT_MESSAGE_TYPE)
 if _message_type == "None":
     _message_type = None
 
+# TEST BUILD
+# After line 65:
+_is_test_build = _env_values.get("TEST_BUILD", "false").lower() == "true"
+IS_TEST_BUILD = _is_test_build
+
+
 
 BUILD_CONDITION = (
     _build_condition

@@ -60,20 +60,25 @@ class MetricsLogger:
         csv_path: Path to the output CSV file. Created if it does not exist.
     """
 
-    def __init__(self, csv_path: str = None) -> None:
+    def __init__(self, csv_path: str = None, is_test_build: bool = False) -> None:
+        
+        # WITH TEST BUILD
+        self._is_test_build = is_test_build
+        
         if csv_path is None:
             # csv_path = get_writable_path("data", "metrics.csv") # OLD: fixed path, now dynamic per build/condition/message
             csv_path = _build_metrics_csv_path()
         self._csv_path = csv_path
-        
-        # Ensure the dist/data/ directory exists
-        os.makedirs(os.path.dirname(self._csv_path), exist_ok=True) # crea la cartella data se non esiste, anche per le build in cui il csv è salvato in dist/data/metrics.csv
-        
         self._metrics_enabled: bool = False
         self._current_condition: Optional[str] = None
-        # Create file with headers if it does not exist
-        if not os.path.exists(self._csv_path):
-            self._write_row(_CSV_COLUMNS)
+        
+        # WITH TEST BUILD: Only create CSV file if NOT in test mode
+        if not is_test_build:
+            # Ensure the dist/data/ directory exists
+            os.makedirs(os.path.dirname(self._csv_path), exist_ok=True) # crea la cartella data se non esiste, anche per le build in cui il csv è salvato in dist/data/metrics.csv     
+            # Create file with headers if it does not exist
+            if not os.path.exists(self._csv_path):
+                self._write_row(_CSV_COLUMNS)
 
     # ------------------------------------------------------------------
     # Public API
@@ -108,10 +113,22 @@ class MetricsLogger:
 
     def log_session_start(self) -> None:
         """Logs the SESSION_START event. Always executed regardless of metrics_enabled."""
+        # WITH TEST BUILD: 2 safe guards (_metrics_enabled + _is_test_build)
+        if not self._metrics_enabled:
+            return
+        if self._is_test_build:
+            return
+        
         self._log(event_type="SESSION_START")
 
     def log_session_end(self) -> None:
         """Logs the SESSION_END event. Always executed regardless of metrics_enabled."""
+        # WITH TEST BUILD: 2 safe guards (_metrics_enabled + _is_test_build)
+        if not self._metrics_enabled:
+            return
+        if self._is_test_build:
+            return
+        
         self._log(event_type="SESSION_END")
 
     # OLD: BET e RESULT erano separati in due eventi diversi

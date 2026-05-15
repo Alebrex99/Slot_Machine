@@ -15,7 +15,7 @@ from core.metrics_logger import MetricsLogger   # ← NEW
 from utils.file_manager import get_path
 from PyQt5.QtWidgets import QApplication
 from core.constants import INITIAL_BUDGET, MESSAGE_COUNTER_POINT, SURVEY_COUNTER_POINT, MIN_BET, MAX_BET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH, TOTAL_TESTS, VALID_CONDITIONS
-from utils.build_config import MESSAGE_TYPE
+from utils.build_config import MESSAGE_TYPE, IS_TEST_BUILD
 # FOR TESTING
 from core.remote_researcher import RemoteResearcher
 
@@ -45,7 +45,12 @@ class MainWindow(QWidget):
 
         # ===============================
         #          WINDOW SETUP
-        self.setWindowTitle("Slot Machine")
+        # ===============================
+        # ORIGINAL
+        # self.setWindowTitle("Slot Machine")
+        # WITH TEST BUILD
+        self.setWindowTitle("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
+        
         self.setWindowIcon(QIcon(get_path("gui", "assets", "icons", "app_icon.ico")))
         self.setMinimumSize(600, 400)
         
@@ -56,7 +61,12 @@ class MainWindow(QWidget):
         self.coins = INITIAL_BUDGET
         self.current_bet = 0.00
         # Experimental session tracking
-        self.bet_counter = 39  # counts from 0 -> increment before each bet to 1..60
+        if IS_TEST_BUILD:
+            self.bet_counter = 10  # first spin increments to 11
+            self._session_end = 15
+        else:
+            self.bet_counter = 0  # counts from 0 -> increment before each bet to 1..60
+            self._session_end = TOTAL_SESSION_BETS
         self.current_reward = 0.00
         self._spinning = False  # True while the spin animation is running
         
@@ -135,7 +145,9 @@ class MainWindow(QWidget):
         #self.coin_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         #self.redeem_btn.clicked.connect(self.on_redeem) # per esperimenti user non può usare redeem, quindi commento il collegamento al dialog
 
-        self.watermark = QLabel("UPV Slot Machine")
+        # self.watermark = QLabel("UPV Slot Machine")
+        # WITH TEST BUILD
+        self.watermark = QLabel("THIS IS A TEST" if IS_TEST_BUILD else "UPV Slot Machine")
         self.watermark.setAlignment(Qt.AlignCenter)
         self.watermark.setObjectName("watermark")
         
@@ -396,7 +408,9 @@ class MainWindow(QWidget):
         
         play_sfx("click.wav")
 
-        self.watermark.setText("UPV Slot Machine")
+        #self.watermark.setText("UPV Slot Machine")
+        # WITH TEST BUILD
+        self.watermark.setText("THIS IS A TEST" if IS_TEST_BUILD else "UPV Slot Machine")
         self.spin_btn.setDisabled(True)
         
         if self.current_bet <= 0 or self.current_bet > self.coins:
@@ -461,7 +475,7 @@ class MainWindow(QWidget):
             self._spinning = False  # BUG3: release lock before show_final_result calls validate_bet
             self.show_final_result()
             # Re-enable only if session is not over (bet 60 disables permanently in show_final_result)
-            if self.bet_counter < TOTAL_SESSION_BETS:
+            if self.bet_counter < self._session_end:
                 self.spin_btn.setDisabled(False)
 
     def show_final_result(self):
@@ -533,7 +547,7 @@ class MainWindow(QWidget):
 
         # FIX: auto-close AFTER bet 60 is fully processed and logged.
         # Old location (on_spin before processing) required a 61st press.
-        if self.bet_counter >= TOTAL_SESSION_BETS:
+        if self.bet_counter >= self._session_end:
             self.spin_btn.setDisabled(True)
             QTimer.singleShot(3000, self.close)
 

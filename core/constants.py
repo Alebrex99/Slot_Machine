@@ -9,7 +9,8 @@
 # CORRENTE
 # None = manual mode / default fallback when no bundled build config is present
 # "W" / "L" / "E" can also be provided by bundled config/build.env in frozen builds
-BUILD_CONDITION: str | None = None # NON IMPORTARE DA COSTANTS.PY! ma da utils.build_config.py
+# NON IMPORTARE DA COSTANTS.PY! ma da utils.build_config.py
+BUILD_CONDITION: str | None = None # NOTE: NON TOCCARE!!!! Assegnata o da input terminal, o in automatico con build
 
 
 # -----------------GAME CONSTANTS-------------------

@@ -4,7 +4,7 @@ from core.remote_researcher import RemoteResearcher
 from gui.main_window import MainWindow
 from core.metrics_logger import MetricsLogger
 # from core.constants import BUILD_CONDITION # Variante
-from utils.build_config import BUILD_CONDITION
+from utils.build_config import BUILD_CONDITION, IS_TEST_BUILD
 from utils.file_manager import get_path
 
 def load_stylesheet(x):
@@ -22,18 +22,29 @@ if __name__ == "__main__":
     load_stylesheet(app)
 
     # ALL'AVVIO APP: viene creato metrics_logger, che prepara il file CSV (solo colonne) metriche
-    metrics_logger = MetricsLogger()  # Initialize metrics logger (creates file if needed)
+    # metrics_logger = MetricsLogger(is_test_build=IS_TEST_BUILD) 
+    # WITH TEST BUILD
+    metrics_logger = MetricsLogger(is_test_build=IS_TEST_BUILD)  
     # REMOTE RESEARCHER: ha il compito di avviare app con i parametri
     remote_researcher = RemoteResearcher(metrics_logger=metrics_logger)  # Initialize remote researcher (waits for input)
     
+    # BUILD_CONDITION: se non c'è allora si passa all'input, è fondamentale
     if BUILD_CONDITION is not None:
         # Fixed build: condition is baked in — skip interactive prompt
         remote_researcher.set_condition(BUILD_CONDITION)
-        remote_researcher.start_metrics()
+        # remote_researcher.start_metrics()
+        # WITH TEST BUILD
+        if not IS_TEST_BUILD:
+            remote_researcher.start_metrics()
     else:
         # Manual mode: existing interactive flow unchanged
         remote_researcher.set_input_data()
-        remote_researcher.start_metrics()
+        # remote_researcher.start_metrics()
+        # WITH TEST BUILD
+        if not IS_TEST_BUILD:
+            remote_researcher.start_metrics()  # in modalità normale, start_metrics viene chiamato dopo l'input
+        
+
 
     
     window = MainWindow(metrics_logger=metrics_logger)
