@@ -85,7 +85,7 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         bottom.setContentsMargins(0, 10, 0, 20)
         bottom.setSpacing(20)
 
-        self.countdown_label = QLabel("30")
+        self.countdown_label = QLabel("60")
         self.countdown_label.setObjectName("countdown_label")
         self.countdown_label.setAlignment(Qt.AlignCenter)
 

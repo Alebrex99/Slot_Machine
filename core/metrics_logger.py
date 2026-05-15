@@ -42,13 +42,13 @@ def _build_metrics_csv_path() -> str:
                 continue
             
             # Se viene trovato un file del tipo della build in corso, es. metrics_e_mex1_2.csv
-            index_part = name[len(prefix):-4] # prende la parte numerica, es. 2
+            index_part = name[len(prefix):-4] # prende la parte numerica, es. 2, come funziona: len("metrics_e_mex1_") = 15, len(".csv") = 4, quindi name[15:-4] prende la parte centrale del nome del file, che dovrebbe essere l'indice numerico
             if index_part.isdigit():
                 last_index = max(last_index, int(index_part)) # aggiorno l'ultimo indice trovato, es. da 0 a 2
     except FileNotFoundError:
         # Directory will be created by MetricsLogger.__init__
         pass
-
+    # mettendo che non venga trovato un file con lo stesso prefisso, last_index rimane 0 e quindi il primo file creato sarà metrics_e_mex1_1.csv
     next_index = last_index + 1
     return os.path.join(metrics_dir, f"{prefix}{next_index}.csv")
 
