@@ -185,11 +185,10 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         """Called by the CLOSE button after the timer expires."""
         if not self._timer_done:
             self._timer.stop()
+        self.hide()
         if not self._callback_fired:
             self._callback_fired = True
-            self.open_message_callback()
-        # OLD: self.accept()  ← metodo QDialog; QWidget usa hide()
-        self.hide()
+            QTimer.singleShot(0, self.open_message_callback)
 
     def closeEvent(self, event):
         """Blocca close() programmatico prima che il timer scada."""

@@ -1,7 +1,7 @@
 # OLD: from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout
 # NEW: added QSizePolicy for responsive reel sizing
-from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QSizePolicy
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QSizePolicy, QShortcut
+from PyQt5.QtGui import QPixmap, QIcon, QKeySequence
 from PyQt5.QtCore import Qt, QTimer
 import random
 import sys
@@ -120,15 +120,17 @@ class MainWindow(QWidget):
         self.bet_up_btn.setAutoRepeatInterval(50) # voglio poter tener pressato il pulsante per aumentare la puntata, quindi uso setAutoRepeat(True) e setAutoRepeatInterval(100) per farlo ripetere ogni 100ms
         self.bet_up_btn.setObjectName("bet_up_btn")
         self.bet_up_btn.setMaximumWidth(300)
-        self.bet_up_btn.setMinimumHeight(40)  
+        self.bet_up_btn.setMinimumHeight(40)
+        #self.bet_up_btn.setFocusPolicy(Qt.NoFocus)
         self.bet_up_btn.clicked.connect(self.increase_bet)
-        
+
         self.bet_down_btn = QPushButton("▼")
         self.bet_down_btn.setAutoRepeat(True)
         self.bet_down_btn.setAutoRepeatInterval(50)
         self.bet_down_btn.setObjectName("bet_down_btn")
         self.bet_down_btn.setMaximumWidth(300)
         self.bet_down_btn.setMinimumHeight(40)
+        #self.bet_down_btn.setFocusPolicy(Qt.NoFocus)
         self.bet_down_btn.clicked.connect(self.decrease_bet)
         
         # Coins display (right side)
@@ -171,6 +173,9 @@ class MainWindow(QWidget):
         self.spin_btn.setObjectName("spin_btn")
         self.spin_btn.setEnabled(False)
         self.spin_btn.clicked.connect(self.on_spin)
+        # Add keyboard shortcut for spacebar
+        self.spin_shortcut = QShortcut(QKeySequence(Qt.Key_Space), self)
+        self.spin_shortcut.activated.connect(self.spin_btn.click)
 
         # MUSIC CONTROLS - COMMENTED FOR EXPERIMENTS
         #self.music_btn = QPushButton("Music: ON")
@@ -553,6 +558,13 @@ class MainWindow(QWidget):
             self.spin_btn.setDisabled(True)
             QTimer.singleShot(3000, self.close)
 
+    # CLOSE EVENT: CATCHED WHEN SELF.CLOSE() IS CALLED
+    def closeEvent(self, event) -> None: 
+        """Intercepts window close to log SESSION_END before exit."""
+        self._metrics.log_session_end()
+        super().closeEvent(event)
+        sys.exit()
+
 
     #--------------------------------------------------
     #                   MESSAGGIO   
@@ -564,6 +576,7 @@ class MainWindow(QWidget):
         open_message_callback() reconnects spin_btn to on_spin() so the session continues from bet 41.
         """
         play_sfx("click.wav")
+        self._lock_game_window()  # Lock game while message is active (same as survey)
         self.message_window = MessageWindow(open_message_callback=self.open_message_callback, parent=self)
         self.message_window.show()
         # Aggiunto per sicurezza ma non serve perchè message_window aggiunto per ultimo in overlay (size)
@@ -574,18 +587,19 @@ class MainWindow(QWidget):
         # reimpostare lo spin button collegandolo nuovamente a on_spin() e non più a on_message()
         # play_sfx("click.wav")        
         # Prima apro la survey:
-        self.open_survey_window()
+        self.open_survey_window()        
         # self.spin_btn.clicked.connect(self.on_spin) # fatto diretto in open_survey_window() 
-    
+
     def open_survey_window(self):
         play_sfx("click.wav")
         # Lock the game window to prevent user interaction
-        self.spin_btn.setDisabled(True)
-        self.bet_display.setDisabled(True)    # ← Lock bet input
-        self.bet_up_btn.setDisabled(True)     # ← Lock bet up button
-        self.bet_down_btn.setDisabled(True)   # ← Lock bet down button
+        self._lock_game_window()
         self.toggle_music()  # Spegnere la musica
-        self.watermark.setText("📋 Survey opened in browser. Please complete it.")
+        
+        # Show waiting message for 5 seconds
+        self.watermark.setText("You'll see a questionnaire 📋 in a moment, get ready!")
+        # After 5 seconds: open browser and update watermark message
+        QTimer.singleShot(5000, self._open_survey_browser)
         
         # POSSIBILITY 1
         # Open survey in system's default browser (maximized)
@@ -611,15 +625,31 @@ class MainWindow(QWidget):
             print(f"[Warning] Could not maximize browser: {e}")'''
         
         # POSSIBILITY 2
+        '''import webbrowser
+        survey_url = "https://polimi.eu.qualtrics.com/jfe/form/SV_8BA0BlaJYCIpEGi"
+        webbrowser.open_new_tab(survey_url)'''
+        
+        # Reconnect spin button to on_spin()
+        self.spin_btn.clicked.disconnect()
+        self.spin_btn.clicked.connect(self.on_spin)
+        
+        # Schedule re-enable after a delay (user completes survey during this time)
+        QTimer.singleShot(35000, self._unlock_game_window)
+    
+    def _open_survey_browser(self):
+        """Open survey browser after 5-second countdown."""
         import webbrowser
         survey_url = "https://polimi.eu.qualtrics.com/jfe/form/SV_8BA0BlaJYCIpEGi"
         webbrowser.open_new_tab(survey_url)
-        
-        # Dopo aver aperto la survey, ricollega lo spin button a on_spin() per continuare la sessione normalmente
-        self.spin_btn.clicked.disconnect()
-        self.spin_btn.clicked.connect(self.on_spin)
-        # Schedule re-enable after a delay (user completes survey during this time)
-        QTimer.singleShot(30000, self._unlock_game_window)
+        self.watermark.setText("📋 Survey opened in browser. Please complete it.")
+    
+    def _lock_game_window(self):
+        """Disable game controls while survey is active."""
+        # Lock the game window to prevent user interaction
+        self.spin_btn.setDisabled(True)
+        self.bet_display.setDisabled(True)    # ← Lock bet input
+        self.bet_up_btn.setDisabled(True)     # ← Lock bet up button
+        self.bet_down_btn.setDisabled(True)   # ← Lock bet down button
     
     def _unlock_game_window(self):
         """Re-enable all game controls after survey timeout."""
@@ -641,7 +671,6 @@ class MainWindow(QWidget):
             return coins_to_add
         return 0
 
-
     def toggle_music(self):
         """Toggle background music on/off."""
         if self._music_on:
@@ -654,13 +683,6 @@ class MainWindow(QWidget):
             #self.music_btn.setText("Music: ON")
 
 
-    # CLOSE EVENT: CATCHED WHEN SELF.CLOSE() IS CALLED
-    def closeEvent(self, event) -> None: 
-        """Intercepts window close to log SESSION_END before exit."""
-        self._metrics.log_session_end()
-        super().closeEvent(event)
-        sys.exit()
-        
     
     
     # ------------------------------------------------------------------

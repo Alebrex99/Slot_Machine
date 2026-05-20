@@ -4,8 +4,34 @@ from core.remote_researcher import RemoteResearcher
 from gui.main_window import MainWindow
 from core.metrics_logger import MetricsLogger
 # from core.constants import BUILD_CONDITION # Variante
-from utils.build_config import BUILD_CONDITION, IS_TEST_BUILD
+from utils.build_config import BUILD_CONDITION, IS_TEST_BUILD, MESSAGE_TYPE
 from utils.file_manager import get_path
+
+import os
+from utils.file_manager import get_writable_path
+
+# Write debug output to a log file (visible regardless of --windowed flag)
+_debug_log = os.path.join(os.path.dirname(sys.executable), "app_debug.log")
+with open(_debug_log, "w") as f:
+    f.write(f"\n=== APPLICATION STARTUP ===\n")
+    f.write(f"Executable: {sys.executable}\n")
+    f.write(f"Executable dir: {os.path.dirname(sys.executable)}\n")
+    f.write(f"Data path: {get_writable_path('data')}\n")
+    f.write(f"BUILD_CONDITION: {BUILD_CONDITION}\n")
+    f.write(f"IS_TEST_BUILD: {IS_TEST_BUILD}\n")
+    f.write(f"MESSAGE_TYPE: {MESSAGE_TYPE}\n")
+    f.write(f"=== END STARTUP ===\n")
+
+print(f"\n=== APPLICATION STARTUP ===")
+print(f"Executable: {sys.executable}")
+print(f"Executable dir: {os.path.dirname(sys.executable)}")
+print(f"Data path: {get_writable_path('data')}")
+print(f"BUILD_CONDITION: {BUILD_CONDITION}")
+print(f"IS_TEST_BUILD: {IS_TEST_BUILD}")
+print(f"MESSAGE_TYPE: {MESSAGE_TYPE}")
+print(f"Debug log written to: {_debug_log}")
+print(f"=== END STARTUP ===\n")
+
 
 def load_stylesheet(x):
     # OLD senza build

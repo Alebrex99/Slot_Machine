@@ -29,9 +29,12 @@ def _build_metrics_csv_path() -> str:
     prefix = f"metrics_{condition_tag}_{message_tag}_"
     metrics_dir = get_writable_path("data")
 
+    print(f"[_build_metrics_csv_path] BUILD_CONDITION={BUILD_CONDITION}, MESSAGE_TYPE={MESSAGE_TYPE}")
+    print(f"[_build_metrics_csv_path] prefix={prefix}, metrics_dir={metrics_dir}")
+
     last_index = 0
     prefix_lower = prefix.lower() # es. "metrics_e_mex1_"
-    # il prefisso esiste già? 
+    # il prefisso esiste già?
     # se sì: aggiorno last_index rispetto all'ultimo file presente
     # se no: last_index rimane 0, azzerato ad ogni build
     try:
@@ -40,17 +43,20 @@ def _build_metrics_csv_path() -> str:
             # Per ogni file in Data/, se il file non c'entra o non è un csv, salto al prossimo
             if not name_lower.startswith(prefix_lower) or not name_lower.endswith(".csv"):
                 continue
-            
+
             # Se viene trovato un file del tipo della build in corso, es. metrics_e_mex1_2.csv
             index_part = name[len(prefix):-4] # prende la parte numerica, es. 2, come funziona: len("metrics_e_mex1_") = 15, len(".csv") = 4, quindi name[15:-4] prende la parte centrale del nome del file, che dovrebbe essere l'indice numerico
             if index_part.isdigit():
                 last_index = max(last_index, int(index_part)) # aggiorno l'ultimo indice trovato, es. da 0 a 2
     except FileNotFoundError:
         # Directory will be created by MetricsLogger.__init__
+        print(f"[_build_metrics_csv_path] metrics_dir does not exist yet: {metrics_dir}")
         pass
     # mettendo che non venga trovato un file con lo stesso prefisso, last_index rimane 0 e quindi il primo file creato sarà metrics_e_mex1_1.csv
     next_index = last_index + 1
-    return os.path.join(metrics_dir, f"{prefix}{next_index}.csv")
+    final_path = os.path.join(metrics_dir, f"{prefix}{next_index}.csv")
+    print(f"[_build_metrics_csv_path] returning path: {final_path}")
+    return final_path
 
 
 class MetricsLogger:
@@ -61,24 +67,40 @@ class MetricsLogger:
     """
 
     def __init__(self, csv_path: str = None, is_test_build: bool = False) -> None:
-        
+
         # WITH TEST BUILD
         self._is_test_build = is_test_build
-        
+        print(f"[MetricsLogger] is_test_build={is_test_build}")
+
         if csv_path is None:
             # csv_path = get_writable_path("data", "metrics.csv") # OLD: fixed path, now dynamic per build/condition/message
             csv_path = _build_metrics_csv_path()
         self._csv_path = csv_path
         self._metrics_enabled: bool = False
         self._current_condition: Optional[str] = None
-        
+        print(f"[MetricsLogger] csv_path={self._csv_path}")
+
         # WITH TEST BUILD: Only create CSV file if NOT in test mode
         if not is_test_build:
-            # Ensure the dist/data/ directory exists
-            os.makedirs(os.path.dirname(self._csv_path), exist_ok=True) # crea la cartella data se non esiste, anche per le build in cui il csv è salvato in dist/data/metrics.csv     
-            # Create file with headers if it does not exist
-            if not os.path.exists(self._csv_path):
-                self._write_row(_CSV_COLUMNS)
+            try:
+                # Ensure the dist/data/ directory exists
+                data_dir = os.path.dirname(self._csv_path)
+                print(f"[MetricsLogger] Creating directory: {data_dir}")
+                os.makedirs(data_dir, exist_ok=True)
+                print(f"[MetricsLogger] Directory created/exists")
+
+                # Create file with headers if it does not exist
+                if not os.path.exists(self._csv_path):
+                    print(f"[MetricsLogger] CSV does not exist, creating with headers")
+                    self._write_row(_CSV_COLUMNS)
+                    print(f"[MetricsLogger] CSV file created successfully at {self._csv_path}")
+                else:
+                    print(f"[MetricsLogger] CSV already exists at {self._csv_path}")
+            except Exception as e:
+                print(f"[MetricsLogger] ERROR creating CSV: {e}")
+                raise
+        else:
+            print(f"[MetricsLogger] Test build mode - skipping CSV creation")
 
     # ------------------------------------------------------------------
     # Public API
