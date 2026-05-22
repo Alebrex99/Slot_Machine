@@ -22,10 +22,10 @@ TOTAL_SESSION_BETS: int = 60
 PHASE_LENGTH: int = 20
 TOTAL_TESTS: int = 50
 MESSAGE_COUNTER_POINT = 40  # punto in cui mostrare il messaggio a metà sessione (dopo 40 scommesse, all'inizio della fase AFTER)
-MESSAGE_TIMER = 60          # durata totale messaggio
+MESSAGE_TIMER = 180         # durata totale messaggio
 # NON IMPORTARE DA COSTANTS.PY! ma da utils.build_config.py
-MESSAGE_TYPE: str | None = "MEX1"   # "MEX1" → immagine senza conto alla rovescia
-                                    # "MEX2" → conto alla rovescia di 60 secondi
+MESSAGE_TYPE: str | None = "MEX1"   # "MEX1" → (supportive) immagine senza conto alla rovescia
+                                    # "MEX2" → (coercive) conto alla rovescia di 180 secondi
                                     # None -> nessun mex
 SURVEY_COUNTER_POINT = 40 # se ho messaggio: esattamente quando chiudo il messaggio, 
                           # se non ho messaggio: semplicemente al suo posto al nuovo click di START (come è presente l'attuale connessione al messaggio)

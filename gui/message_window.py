@@ -24,7 +24,7 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         - Covers the parent's client area (geometry 0,0,w,h — NOT frameGeometry).
         - Loads mex1.png (MEX1) or mex2.png (MEX2) from gui/assets/icons/.
           Falls back to banana.png if the file is missing.
-        - 30-second timer; CLOSE button (300 px wide, centered) disabled until it expires.
+        - 30 (180)-second timer; CLOSE button (300 px wide, centered) disabled until it expires.
         - MEX2 only: numeric countdown appears next to CLOSE during the last 10 s.
         - Programmatic close() is blocked before the timer expires.
         - open_message_callback() is fired exactly once on close.
@@ -85,7 +85,7 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         bottom.setContentsMargins(0, 10, 0, 20)
         bottom.setSpacing(20)
 
-        self.countdown_label = QLabel("60")
+        self.countdown_label = QLabel(str(MESSAGE_TIMER)) # inizialmente mostra il tempo totale, poi si aggiorna ogni secondo
         self.countdown_label.setObjectName("countdown_label")
         self.countdown_label.setAlignment(Qt.AlignCenter)
 
@@ -99,16 +99,16 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         # --------------------------------------------------------------------------------
         # START
         self._render_image()
-        # Start the 30-second countdown
+        # Start the 30(180)-second countdown
         self._elapsed = 0
         self._timer = QTimer()
 
         # MEX1: abilita la chiusura subito senza timer
-        # MEX2: avviato un timer di 30 secondi, il pulsante close si sblocca solo alla fine del timer
+        # MEX2: avviato un timer di 30(180) secondi, il pulsante close si sblocca solo alla fine del timer
         if MESSAGE_TYPE == "MEX2":
             self.close_btn.setEnabled(False)
             self.countdown_label.setVisible(True)
-            # Start the 30-second countdown
+            # Start the 30(180)-second countdown
             self._timer.timeout.connect(self._tick)
             self._timer.start(1000)
         else:
