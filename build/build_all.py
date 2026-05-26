@@ -7,8 +7,10 @@ BUILD_ENV = BASE_ENV / "build.env"
 BUILDS = [
     ("W", "MEX1"), ("W", "MEX2"), ("W", None),
     ("L", "MEX1"), ("L", "MEX2"), ("L", None),
-    ("E", "MEX1"), ("E", "MEX2"), ("E", None),
 ]
+# ("E", "MEX1"), ("E", "MEX2"), ("E", None),
+#BUILDS = [("W", "MEX2")]
+
 
 
 try: 

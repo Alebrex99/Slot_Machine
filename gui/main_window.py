@@ -559,11 +559,22 @@ class MainWindow(QWidget):
             QTimer.singleShot(3000, self.close)
 
     # CLOSE EVENT: CATCHED WHEN SELF.CLOSE() IS CALLED
-    def closeEvent(self, event) -> None: 
-        """Intercepts window close to log SESSION_END before exit."""
+    def closeEvent(self, event) -> None:
+        """Intercepts window close to log SESSION_END before exit.
+        N.B. sys.exit() è correttamente usato nel main, quindi non servirebbe qui se l'app la usassimo sempre
+        dall'inizio alla fine. Però non mettendolo qui e lasciando il controllo al main, da problemi con ALT+F4 il quale chiude solo la finestra
+        mentre il processo rimane attivo.
+        ALT + F4 = chiamare self.close(), dunque è fondamentale mettere qui il sys.exit() o il os._exit(0), altrimenti: finestra chiusa, app in esecuzione, si sente la musica senza un app avviata"""
         self._metrics.log_session_end()
-        super().closeEvent(event)
+
+        # VERSIONE PULITA
+        super().closeEvent(event) #prima chiude la finestra e poi esce in modo pulito con sys
         sys.exit()
+
+        # VERSIONE FORZATA PER IMOTIONS
+        #event.accept() #accetto l'evento, non chiudo la finestra, interrompo proprio il processo per funzionamento in IMOTIONS
+        #os._exit(0)  # sys.exit() is swallowed by PyQt5's exception handler; os._exit bypasses it
+
 
 
     #--------------------------------------------------
