@@ -83,3 +83,6 @@ MESSAGE_TYPE = (
     if _message_type in _VALID_MESSAGE_TYPES
     else DEFAULT_MESSAGE_TYPE
 )
+
+# LANGUAGE FLAG — set to True to use Spanish UI text
+SPANISH = True

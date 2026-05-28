@@ -5,7 +5,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer, Qt
 from utils.file_manager import get_path
 from core.constants import MESSAGE_TIMER # , MESSAGE_TYPE # Variante
-from utils.build_config import MESSAGE_TYPE
+from utils.build_config import MESSAGE_TYPE, SPANISH
 
 
 # OLD: class MessageWindow(QDialog):
@@ -89,7 +89,11 @@ class MessageWindow(QWidget): # con QWidget + uso del parent tale ifnestra è so
         self.countdown_label.setObjectName("countdown_label")
         self.countdown_label.setAlignment(Qt.AlignCenter)
 
-        self.close_btn = QPushButton("CLOSE")
+        if SPANISH:
+            self.close_btn = QPushButton("CERRAR")
+        else:
+            self.close_btn = QPushButton("CLOSE")
+
         self.close_btn.setObjectName("close_btn")
         self.close_btn.clicked.connect(self.on_close)
 

@@ -15,7 +15,7 @@ from core.metrics_logger import MetricsLogger   # ← NEW
 from utils.file_manager import get_path
 from PyQt5.QtWidgets import QApplication
 from core.constants import INITIAL_BUDGET, MESSAGE_COUNTER_POINT, SURVEY_COUNTER_POINT, MIN_BET, MAX_BET, BET_STEP, TOTAL_SESSION_BETS, PHASE_LENGTH, TOTAL_TESTS, VALID_CONDITIONS
-from utils.build_config import MESSAGE_TYPE, IS_TEST_BUILD
+from utils.build_config import MESSAGE_TYPE, IS_TEST_BUILD, SPANISH
 # FOR TESTING
 from core.remote_researcher import RemoteResearcher
 
@@ -49,8 +49,11 @@ class MainWindow(QWidget):
         # ORIGINAL
         # self.setWindowTitle("Slot Machine")
         # WITH TEST BUILD
-        self.setWindowTitle("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
-        
+        if SPANISH:
+            self.setWindowTitle("ESTO ES UNA PRUEBA" if IS_TEST_BUILD else "Slot Machine")
+        else:
+            self.setWindowTitle("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
+                
         self.setWindowIcon(QIcon(get_path("gui", "assets", "icons", "app_icon.ico")))
         self.setMinimumSize(600, 400)
         
@@ -149,7 +152,10 @@ class MainWindow(QWidget):
 
         # self.watermark = QLabel("UPV Slot Machine")
         # WITH TEST BUILD
-        self.watermark = QLabel("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
+        if SPANISH:
+            self.watermark = QLabel("ESTO ES UNA PRUEBA" if IS_TEST_BUILD else "Slot Machine")
+        else:
+            self.watermark = QLabel("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
         self.watermark.setAlignment(Qt.AlignCenter)
         self.watermark.setObjectName("watermark")
         
@@ -169,7 +175,10 @@ class MainWindow(QWidget):
             # kept at the window-derived size without any sizeHint feedback loop.
             reel.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        self.spin_btn = QPushButton("PLAY")
+        if SPANISH:
+            self.spin_btn = QPushButton("JUGAR")
+        else:
+            self.spin_btn = QPushButton("PLAY")
         self.spin_btn.setObjectName("spin_btn")
         self.spin_btn.setEnabled(False)
         self.spin_btn.clicked.connect(self.on_spin)
@@ -417,11 +426,17 @@ class MainWindow(QWidget):
 
         #self.watermark.setText("Slot Machine")
         # WITH TEST BUILD
-        self.watermark.setText("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
+        if SPANISH:
+            self.watermark.setText("ESTO ES UNA PRUEBA" if IS_TEST_BUILD else "Slot Machine")
+        else:
+            self.watermark.setText("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
         self.spin_btn.setDisabled(True)
         
         if self.current_bet <= 0 or self.current_bet > self.coins:
-            self.watermark.setText("Invalid bet!")
+            if SPANISH:
+                self.watermark.setText("¡Apuesta no válida!")
+            else:
+                self.watermark.setText("Invalid bet!")
             self.spin_btn.setDisabled(False)
             return
 
@@ -528,9 +543,16 @@ class MainWindow(QWidget):
 
         if reward > 0:
             play_sfx("win.wav")
-            self.watermark.setText(f"You won +{reward:.2f}")
+            if SPANISH:
+                self.watermark.setText(f"¡Has ganado +{reward:.2f}!")
+            else:
+                self.watermark.setText(f"You won +{reward:.2f}")
         else:
-            self.watermark.setText("Try again!")
+            if SPANISH:
+                self.watermark.setText("¡Inténtalo de nuevo!")
+            else:
+                self.watermark.setText("Try again!")
+
   
         # GESTIONE DEL MESSAGGIO
         # user è in 39, clicca play e va in bet 40 (ultima di DURING) -> ora clicca spin -> risultato mostrato (stop avanzamento bet)
@@ -588,6 +610,7 @@ class MainWindow(QWidget):
         """
         play_sfx("click.wav")
         self._lock_game_window()  # Lock game while message is active (same as survey)
+        self._stop_music()
         self.message_window = MessageWindow(open_message_callback=self.open_message_callback, parent=self)
         self.message_window.show()
         # Aggiunto per sicurezza ma non serve perchè message_window aggiunto per ultimo in overlay (size)
@@ -605,10 +628,13 @@ class MainWindow(QWidget):
         play_sfx("click.wav")
         # Lock the game window to prevent user interaction
         self._lock_game_window()
-        self.toggle_music()  # Spegnere la musica
+        self._stop_music()  # Spegnere la musica
         
         # Show waiting message for 5 seconds
-        self.watermark.setText("You'll see a questionnaire 📋 in a moment, get ready!")
+        if SPANISH:
+            self.watermark.setText("En un momento verás un cuestionario, ¡prepárate!")
+        else:
+            self.watermark.setText("You'll see a questionnaire 📋 in a moment, get ready!")
         # After 5 seconds: open browser and update watermark message
         QTimer.singleShot(5000, self._open_survey_browser)
         
@@ -652,7 +678,11 @@ class MainWindow(QWidget):
         import webbrowser
         survey_url = "https://polimi.eu.qualtrics.com/jfe/form/SV_8BA0BlaJYCIpEGi"
         webbrowser.open_new_tab(survey_url)
-        self.watermark.setText("📋 Survey opened in browser. Please complete it.")
+        if SPANISH:
+            self.watermark.setText("Cuestionario abierto en el navegador. Por favor, complétalo.")
+        else:
+            self.watermark.setText("📋 Survey opened in browser. Please complete it.")
+
     
     def _lock_game_window(self):
         """Disable game controls while survey is active."""
@@ -668,8 +698,11 @@ class MainWindow(QWidget):
         self.bet_display.setDisabled(False)    # ← Unlock bet input
         self.bet_up_btn.setDisabled(False)     # ← Unlock bet up button
         self.bet_down_btn.setDisabled(False)   # ← Unlock bet down button
-        self.toggle_music()  # Riaccendere la musica
-        self.watermark.setText("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
+        self._start_music()  # Riaccendere la musica
+        if SPANISH:
+            self.watermark.setText("ESTO ES UNA PRUEBA" if IS_TEST_BUILD else "Slot Machine")
+        else:
+            self.watermark.setText("THIS IS A TEST" if IS_TEST_BUILD else "Slot Machine")
         self.validate_bet()  # Re-validate in case bet state changed
         
     def redeem_code_callback(self, code: str) -> int:
@@ -682,6 +715,10 @@ class MainWindow(QWidget):
             return coins_to_add
         return 0
 
+
+    # -----------------------------------------------------------------
+    #               MUSIC CONTROLS
+    # ----------------------------------------------------------------
     def toggle_music(self):
         """Toggle background music on/off."""
         if self._music_on:
@@ -693,6 +730,17 @@ class MainWindow(QWidget):
             self._music_on = True
             #self.music_btn.setText("Music: ON")
 
+    def _stop_music(self):
+        """Explicitly stop music — safe to call even if already stopped."""
+        if self._music_on:
+            stop_bgm()
+            self._music_on = False
+
+    def _start_music(self):
+        """Explicitly start music — safe to call even if already playing."""
+        if not self._music_on:
+            play_bgm("bgm.mp3")
+            self._music_on = True
 
     
     
