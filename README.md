@@ -1,6 +1,6 @@
-## 🎰 Slot Machine — Research-Grade Gambling Simulator
+## 🎰 Slot Machine — Animated Desktop Slot Machine
 
-**A modern, animated slot machine built with PyQt5 + Pygame, designed as controlled experimental software to study human gambling behaviour.**
+**A modern, animated slot machine desktop application built with PyQt5 + Pygame, with fully scripted (deterministic) outcomes and per-session metrics logging.**
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-blue.svg">
@@ -20,16 +20,16 @@
 
 ### 🎯 Core Purpose
 
-A desktop slot machine that collects behavioural metrics over **exactly 60 bets** (3 phases of 20). The core invariant of the experiment is that **the player can never truly win or lose freely — every outcome is scripted in advance** by the experimental condition. What looks like luck to the participant is a fully deterministic sequence chosen by the researcher.
+A desktop slot machine that logs gameplay metrics over **exactly 60 bets** (3 phases of 20). The core invariant is that **the player can never truly win or lose freely — every outcome is scripted in advance** by the selected condition. What looks like luck is a fully deterministic sequence fixed at build/configuration time.
 
-Two experimental conditions are used in production:
+Two conditions are used in production:
 
 | Code | Condition | What the player experiences in bets 21–40 |
 |------|-----------|-------------------------------------------|
 | **W** | **WIN**  | Budget trends **upward** (16 wins / 4 losses) |
 | **L** | **LOSE** | Budget trends **downward** (3 wins / 17 losses) |
 
-> A third condition **E (EQUAL** — flat budget) exists fully in the code but was **not used** in the final study, so it is commented out of the production build list. It remains available for development and testing.
+> A third condition **E (EQUAL** — flat budget) exists fully in the code but was **not used** in the final production set, so it is commented out of the production build list. It remains available for development and testing.
 
 ---
 
@@ -58,7 +58,7 @@ data/
 ```
 
 #### 1. Entry Point — [main.py](main.py)
-- Builds `MetricsLogger` (prepares the per-participant CSV, unless it's a TEST build).
+- Builds `MetricsLogger` (prepares the per-run CSV, unless it's a TEST build).
 - Builds `RemoteResearcher` — the **only** object allowed to set the condition and enable metrics.
 - If `BUILD_CONDITION` is baked in (frozen build) → skips the prompt. Otherwise → interactive terminal prompt.
 - Shows `MainWindow`; if TEST mode was requested, runs the automated headless playthrough.
@@ -88,7 +88,7 @@ The result is **computed the instant SPIN is pressed** — the animation is pure
 
 ---
 
-### 📊 The 3 Experimental Phases
+### 📊 The 3 Phases
 
 Three phases of 20 bets each, keyed on the **global** bet number (1–60):
 
@@ -98,7 +98,7 @@ Three phases of 20 bets each, keyed on the **global** bet number (1–60):
 | **DURING** | 21–40 | `DURING_PHASE_{EQUAL\|WIN\|LOSE}` | EQUAL: recovery · WIN: % gains · LOSE: consolation | ✅ **Controls gameplay** |
 | **AFTER**  | 41–60 | `BEFORE_AFTER_PHASE` | Recover all cumulative losses + current bet | None (fixed) |
 
-Each map (in [core/constants.py](core/constants.py)) maps a bet number → `True` (win) or `False` (loss). BEFORE and AFTER are **identical and condition-agnostic** — the experimental manipulation lives entirely in the DURING phase.
+Each map (in [core/constants.py](core/constants.py)) maps a bet number → `True` (win) or `False` (loss). BEFORE and AFTER are **identical and condition-agnostic** — the condition's effect lives entirely in the DURING phase.
 
 **The exact scripted sequences** (✅ = win, ⬜ = loss):
 
@@ -112,7 +112,7 @@ DURING_PHASE_WIN   (bets 21–40):  16 wins /  4 losses  → strongly upward
 DURING_PHASE_LOSE  (bets 21–40):   3 wins / 17 losses  → strongly downward (wins only at 25, 30, 35)
 ```
 
-> The AFTER phase reuses the BEFORE map via `BEFORE_AFTER_PHASE[bet_number - 40]`, so bet 41 uses index 1, bet 42 uses index 2, and so on — the participant relives the same "flat" pattern after the manipulation.
+> The AFTER phase reuses the BEFORE map via `BEFORE_AFTER_PHASE[bet_number - 40]`, so bet 41 uses index 1, bet 42 uses index 2, and so on — the same "flat" pattern plays out again after the DURING phase.
 
 Per-phase starting budgets are captured once, lazily, at the first bet of each phase (the `None` guard means no external reset is needed in normal play):
 ```python
@@ -133,7 +133,7 @@ The reward system is **fully deterministic**. The win/loss *sequence* is scripte
 
 | | Where it comes from | Chosen or derived? |
 |---|---|---|
-| **Percentages** (`EXPECTED_PERCENTAGE_*`) | the researcher, shaping the target curve | **chosen** — design input |
+| **Percentages** (`EXPECTED_PERCENTAGE_*`) | set at design time to shape the target curve | **chosen** — design input |
 | **Paytable** (`REWARD_TABLE_MUL`) | a fixed slot-style ladder, set once | **chosen** — cosmetic |
 | **Multiplier of a spin** | `m = E / bet`, snapped to the paytable | **derived** — per spin |
 
@@ -189,7 +189,7 @@ Budget
        │─── BEFORE ───│ DURING │ AFTER │
        #=WIN   ==EQUAL   .=LOSE
 ```
-The manipulation is entirely in **DURING (21–40)**: the curves are indistinguishable in BEFORE, fan out sharply through DURING, then each holds its new level in AFTER (because AFTER re-anchors to whatever budget DURING produced).
+The condition's effect is entirely in **DURING (21–40)**: the curves are indistinguishable in BEFORE, fan out sharply through DURING, then each holds its new level in AFTER (because AFTER re-anchors to whatever budget DURING produced).
 
 #### The equations, as ported to code
 
@@ -206,7 +206,7 @@ The spreadsheet columns map **one-to-one** onto the Python functions:
 
 *(`$B$2` = the 100-coin start, `$B$22` = the DURING-start budget, `C` = bet, `F` = the chosen percentage, `T`/`U` = the paytable.)*
 
-> **Why deterministic instead of probabilistic?** The abandoned probabilistic prototype could only control outcomes *on average*: across many players the budget would trend as intended, but any *single* participant might hit a wild run that breaks their experimental condition. By scripting the win/loss sequence and solving each win for its exact payout, **every** participant experiences the intended trajectory — essential for a controlled study. The cost is that the payout must adapt to the player's variable bet, hence `m = E/bet` snapped to the paytable. The `XLOOKUP` fallback chain (exact → smaller → larger) is precisely why `calculate_multiplier()` snaps down first and only falls up as a last resort: it reproduces the spreadsheet's own resolution order.
+> **Why deterministic instead of probabilistic?** The abandoned probabilistic prototype could only control outcomes *on average*: across many runs the budget would trend as intended, but any *single* run might hit a wild streak that breaks the intended condition. By scripting the win/loss sequence and solving each win for its exact payout, **every** run follows the intended trajectory. The cost is that the payout must adapt to the player's variable bet, hence `m = E/bet` snapped to the paytable. The `XLOOKUP` fallback chain (exact → smaller → larger) is precisely why `calculate_multiplier()` snaps down first and only falls up as a last resort: it reproduces the spreadsheet's own resolution order.
 
 The three sections below document each ported function in detail.
 
@@ -319,17 +319,17 @@ Notice the deliberate structure: each of the 9 symbols appears **twice** — onc
 
 ---
 
-### 🖼️ The Message + Survey System (bet 40)
+### 🖼️ The Message + Questionnaire System (bet 40)
 
-At the boundary between the DURING and AFTER phases (bet 40), the app shows a full-screen overlay — the experimental "message" manipulation — then routes the participant to an online questionnaire. The variant is fixed per build via `MESSAGE_TYPE`:
+At the boundary between the DURING and AFTER phases (bet 40), the app shows a full-screen image overlay, then opens an online questionnaire in the browser. The overlay variant is fixed per build via `MESSAGE_TYPE`:
 
 | `MESSAGE_TYPE` | Overlay shown | Behaviour |
 |---|---|---|
-| **MEX1** | `mex1.png` (supportive) | CLOSE button enabled immediately |
-| **MEX2** | `mex2.png` (coercive)   | CLOSE locked for a **180 s** countdown (`MESSAGE_TIMER`) |
-| **None** (`NO_MEX`) | *(no overlay)* | Goes straight to the survey |
+| **MEX1** | `mex1.png` | CLOSE button enabled immediately |
+| **MEX2** | `mex2.png` | CLOSE locked for a **180 s** countdown (`MESSAGE_TIMER`) |
+| **None** (`NO_MEX`) | *(no overlay)* | Goes straight to the questionnaire |
 
-Flow: press SPIN on bet 40 → overlay ([gui/message_window.py](gui/message_window.py)) → on close, the game locks, music stops, and after a 5 s heads-up the **Qualtrics survey** opens in the browser. Controls re-enable ~35 s later so the session can continue into bets 41–60. Programmatic close of the overlay is blocked until the timer expires.
+Flow: press SPIN on bet 40 → overlay ([gui/message_window.py](gui/message_window.py)) → on close, the game locks, music stops, and after a 5 s heads-up the **questionnaire URL** opens in the browser. Controls re-enable ~35 s later so the session continues into bets 41–60. Programmatic close of the overlay is blocked until the timer expires.
 
 ---
 
@@ -343,8 +343,8 @@ A single flag `SPANISH` in [utils/build_config.py](utils/build_config.py) switch
 
 There are **two unrelated testing mechanisms**; don't confuse them:
 
-#### A) The TEST **build** (participant familiarization)
-A separate, self-contained executable used to let participants get comfortable with the interface **before** the real session:
+#### A) The TEST **build** (interface familiarization)
+A separate, self-contained executable used to let a user get comfortable with the interface **before** a real session:
 - Window title: **"THIS IS A TEST"** / **"ESTO ES UNA PRUEBA"**.
 - Session: exactly **5 bets** (`bet_counter` starts at 10, ends at 15 — uses `BEFORE_AFTER_PHASE` indices 11–15).
 - **No metrics** — zero CSV files created (triple-layer prevention: no file in `__init__`, session logs guarded by `_metrics_enabled`, `start_metrics()` never called).
@@ -388,7 +388,7 @@ The window is a single `QWidget` with a vertical layout: **top** = bet controls 
 
 ### 📋 Data Collection — [core/metrics_logger.py](core/metrics_logger.py)
 
-Append-only CSV, auto-named per participant to avoid overwrites:
+Append-only CSV, auto-named per run to avoid overwrites:
 
 ```
 data/metrics_{CONDITION}_{MESSAGE}_{INDEX}.csv
@@ -418,7 +418,7 @@ TIMESTAMP,EVENT,BET_NUMBER,BET,CONDITION,RESULT,COIN,MESSAGE
 ...
 2026-07-24 10:24:41.7,SESSION_END,,,,,,
 ```
-> The `MEX` event and its `MESSAGE` column, plus the remote-charge/remote-condition hooks, are wired in [core/metrics_logger.py](core/metrics_logger.py) as stubs for a future TCP-based remote-researcher integration; the current build sets everything from local input.
+> The `MEX` event and its `MESSAGE` column, plus the remote-charge/remote-condition hooks, are wired in [core/metrics_logger.py](core/metrics_logger.py) as stubs for a future TCP-based remote-control integration; the current build sets everything from local input.
 
 ---
 
@@ -458,4 +458,4 @@ TOTAL_TESTS = 50              # automated stress-test sessions
 | `build/build_all_launchers.py` | 6 iMotions launcher `.exe` + 6 backup `.bat` files |
 | `build/build_imotions_launcher.py` | The TEST build's iMotions launcher (`imotions_launcher.exe`) |
 
-Each production build is deployed inside iMotions via a **launcher** that runs the slot machine, waits for it to exit, then sends **Shift + Page Down** to advance iMotions to the next stimulus. **Full step-by-step instructions are in [INSTRUCTIONS.md](INSTRUCTIONS.md).**
+Each production build is deployed inside iMotions via a **launcher** that runs the slot machine, waits for it to exit, then sends **Shift + Page Down** to advance iMotions to the next item. **Full step-by-step instructions are in [INSTRUCTIONS.md](INSTRUCTIONS.md).**

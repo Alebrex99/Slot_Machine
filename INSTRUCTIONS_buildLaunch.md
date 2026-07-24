@@ -48,11 +48,11 @@ Inside each `LAUNCHERS/` subfolder you will find two launcher options — pick o
 | `launcher_X_Y.exe` | PyInstaller build — no console window |
 | `bat_launcher_X_Y.exe` | Bat-to-Exe build — no console window |
 
-In iMotions, add the chosen launcher `.exe` as the stimulus for that condition.
+In iMotions, add the chosen launcher `.exe` as the item for that condition.
 
 **What the launcher does automatically:**
 1. Starts the slot machine application and waits for it to finish
-2. Sends **Shift + Page Down** to iMotions to advance to the next stimulus
+2. Sends **Shift + Page Down** to iMotions to advance to the next page
 
 ---
 

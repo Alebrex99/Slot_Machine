@@ -43,7 +43,7 @@ pip install pyqt5 pygame pyinstaller
 
 ## 2. Running from source code
 
-Run interactively — the terminal will prompt for the experimental condition:
+Run interactively — the terminal will prompt for the condition:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
@@ -56,7 +56,7 @@ At the prompt (`Insert CONDITION ...`), type one of:
 |-------|--------|
 | `W` or `WIN`   | WIN condition — upward budget trend during bets 21–40 |
 | `L` or `LOSE`  | LOSE condition — downward budget trend during bets 21–40 |
-| `E` or `EQUAL` | EQUAL condition — flat budget (dev/testing only; not used in the study) |
+| `E` or `EQUAL` | EQUAL condition — flat budget (dev/testing only; not used in the final set) |
 | `TEST W` / `TEST L` / `TEST E` | **Headless automated run** — 50 sessions × 60 bets, no user interaction |
 
 **Syntax check without launching the GUI:**
@@ -93,7 +93,7 @@ Outputs go to `dist/`.
 
 ### 4a. TEST build
 
-The TEST build is a short, metrics-free familiarization version (5 bets, title *"THIS IS A TEST" / "ESTO ES UNA PRUEBA"*, auto-closes). Participants use it to get comfortable with the interface before the real session.
+The TEST build is a short, metrics-free familiarization version (5 bets, title *"THIS IS A TEST" / "ESTO ES UNA PRUEBA"*, auto-closes). It lets a user get comfortable with the interface before a real session.
 
 ```powershell
 python build/build_test.py
@@ -120,7 +120,7 @@ Builds **6 executables** — all combinations of the two used conditions (**W**,
 | `dist/SlotMachine_L_MEX2.exe` |
 | `dist/SlotMachine_L_NO_MEX.exe` |
 
-> **Why no EQUAL builds?** The `E` condition is fully implemented but was dropped from the final study, so its three entries are **commented out** in the `BUILDS` list inside [build/build_all.py](build/build_all.py). Uncomment them if you ever need the EQUAL variants.
+> **Why no EQUAL builds?** The `E` condition is fully implemented but was dropped from the final set, so its three entries are **commented out** in the `BUILDS` list inside [build/build_all.py](build/build_all.py). Uncomment them if you ever need the EQUAL variants.
 
 Each build bundles the assets, styles, `redeem_codes.json`, and the generated `build.env` (containing `BUILD_CONDITION` + `MESSAGE_TYPE`), plus the full `pygame` package.
 
@@ -130,11 +130,11 @@ Each build bundles the assets, styles, `redeem_codes.json`, and the generated `b
 
 ## 5. Building the iMotions launchers
 
-**Why a launcher at all?** iMotions can only trigger a stimulus by an **`.exe` path**, and after the stimulus it needs a keystroke to advance to the next survey page. A launcher is a tiny wrapper that:
+**Why a launcher at all?** iMotions can only launch an item by an **`.exe` path**, and after that item exits it needs a keystroke to advance to the next page. A launcher is a tiny wrapper that:
 
 1. Launches the target slot-machine `.exe`.
 2. **Blocks until that `.exe` exits** (for any reason).
-3. Sends **Shift + Page Down** to iMotions, advancing it to the next stimulus/survey page.
+3. Sends **Shift + Page Down** to iMotions, advancing it to the next page.
 
 There are **two ways** to produce a launcher. Both implement the exact same behaviour (`LAUNCHER_TEMPLATE`).
 
@@ -199,7 +199,7 @@ For each condition you want to present:
    | `SlotMachine_L_NO_MEX.exe` | `LAUNCHERS/L_NO_MEX/` |
    | `SlotMachine_TEST.exe`    | `LAUNCHERS/TEST/` |
 
-3. In iMotions, add the **launcher `.exe`** (Path A) — or your converted Bat-to-Exe (Path B) — as the stimulus for that condition. Do **not** point iMotions at the slot-machine `.exe` directly, or it will never advance to the next page.
+3. In iMotions, add the **launcher `.exe`** (Path A) — or your converted Bat-to-Exe (Path B) — as the item for that condition. Do **not** point iMotions at the slot-machine `.exe` directly, or it will never advance to the next page.
 
 **What the launcher does automatically:** starts the slot machine → waits for it to finish → sends Shift + Page Down to move iMotions on.
 
@@ -242,13 +242,13 @@ metrics_{CONDITION}_{MESSAGE}_{INDEX}.csv
 ```
 - `{CONDITION}` = `W` / `L` / `E`, or **`MANUAL`** when run unbaked from source.
 - `{MESSAGE}` = `MEX1` / `MEX2` / **`NO_MEX`**.
-- `{INDEX}` auto-increments per participant (`_1`, `_2`, …) so nothing is overwritten.
+- `{INDEX}` auto-increments per run (`_1`, `_2`, …) so nothing is overwritten.
 
 **The TEST build writes no CSV at all** — it is completely isolated from metrics.
 
 Schema and event types are documented in **[README.md](README.md#-data-collection--coremetrics_loggerpy)**.
 
-> ⚠️ A BET row is logged **at the end of the reel animation**, not on click. If a participant force-closes the app mid-spin, that final bet is not recorded (only `SESSION_END` is written).
+> ⚠️ A BET row is logged **at the end of the reel animation**, not on click. If the app is force-closed mid-spin, that final bet is not recorded (only `SESSION_END` is written).
 
 ---
 

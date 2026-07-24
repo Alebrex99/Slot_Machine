@@ -2,7 +2,7 @@
 
 This is the **exhaustive** developer reference. It walks through the system **in execution order**, starting from `main.py`, explaining *how each component works internally*, *why it is built that way*, and *how the pieces talk to each other* — including a full, detailed treatment of the **build system**.
 
-- For a **conceptual overview** (what the experiment is, phases, reward maths at a glance) → [README.md](README.md).
+- For a **conceptual overview** (what the app is, phases, reward maths at a glance) → [README.md](README.md).
 - For **operational how-to** (run, build, deploy into iMotions) → [INSTRUCTIONS.md](INSTRUCTIONS.md).
 - This document is the **why & how of the internals**.
 
@@ -14,7 +14,7 @@ This is the **exhaustive** developer reference. It walks through the system **in
 2. [Startup sequence — `main.py`](#2-startup-sequence--mainpy)
 3. [Configuration layer — `build_config.py` + `constants.py`](#3-configuration-layer--build_configpy--constantspy)
 4. [Path resolution — `utils/file_manager.py`](#4-path-resolution--utilsfile_managerpy)
-5. [The researcher authority — `core/remote_researcher.py`](#5-the-researcher-authority--coreremote_researcherpy)
+5. [The condition authority — `core/remote_researcher.py`](#5-the-condition-authority--coreremote_researcherpy)
 6. [The reward engine — `core/slot_logic.py`](#6-the-reward-engine--coreslot_logicpy)
 7. [Metrics & CSV — `core/metrics_logger.py`](#7-metrics--csv--coremetrics_loggerpy)
 8. [The GUI & session loop — `gui/main_window.py`](#8-the-gui--session-loop--guimain_windowpy)
@@ -134,13 +134,13 @@ PyInstaller `--onefile` builds unpack into a **temporary** directory (`sys._MEIP
 | `get_path(*p)` | **Read-only bundled assets** (images, sounds, QSS, `build.env`, `redeem_codes.json`) | project root | `sys._MEIPASS` (temp unpack dir) |
 | `get_writable_path(*p)` | **Files that must persist** (the metrics CSVs, `user_data.json`) | project root | `os.path.dirname(sys.executable)` (next to the `.exe`) |
 
-> **Why two functions?** If metrics were written under `get_path` (i.e. into `_MEIPASS`), they'd be **deleted the moment the app closes** — the researcher would lose all data. `get_writable_path` deliberately targets the folder *beside* the executable so CSVs survive. Conversely, assets must be read from `_MEIPASS` because that's where PyInstaller extracted them. Getting these two backwards is the classic "works in dev, silently loses data in the build" bug — hence the explicit split.
+> **Why two functions?** If metrics were written under `get_path` (i.e. into `_MEIPASS`), they'd be **deleted the moment the app closes** — all logged data would be lost. `get_writable_path` deliberately targets the folder *beside* the executable so CSVs survive. Conversely, assets must be read from `_MEIPASS` because that's where PyInstaller extracted them. Getting these two backwards is the classic "works in dev, silently loses data in the build" bug — hence the explicit split.
 
 `file_manager` also provides `load_json` / `save_json` (safe, directory-creating JSON helpers) used by the redeem subsystem.
 
 ---
 
-## 5. The researcher authority — `core/remote_researcher.py`
+## 5. The condition authority — `core/remote_researcher.py`
 
 `RemoteResearcher` is the **sole authorized owner** of two responsibilities. Nothing else in the app may perform them:
 
@@ -154,7 +154,7 @@ PyInstaller `--onefile` builds unpack into a **temporary** directory (`sys._MEIP
 - Recognizes the `TEST <CONDITION>` prefix → sets `_test_mode = True` and the condition, then waits for ENTER.
 - Otherwise validates a plain condition and recurses on invalid input (re-prompts until valid).
 
-There are also **remote stubs** (`remote_change_condition`, `remote_charge_coin`, `remote_send_message`) that log `MEX` events — placeholders for a future TCP researcher console. They are wired to the logger but never triggered in the current local-input build.
+There are also **remote stubs** (`remote_change_condition`, `remote_charge_coin`, `remote_send_message`) that log `MEX` events — placeholders for a future TCP remote-control console. They are wired to the logger but never triggered in the current local-input build.
 
 > **Why funnel condition-setting through one method?** Because `set_condition` has a *side effect* (`update_condition` mutates a global in `slot_logic`). If `MainWindow` could set the condition directly, the GUI's idea of the condition and the reward engine's global could drift apart — producing a session whose CSV says "WIN" but whose payouts follow "EQUAL". Centralizing guarantees they move together.
 
@@ -242,7 +242,7 @@ Purely cosmetic translation of an already-decided outcome:
 Builds `data/metrics_{CONDITION}_{MESSAGE}_{INDEX}.csv`:
 - `{CONDITION}` = `BUILD_CONDITION` or `"MANUAL"` when `None` (dev runs).
 - `{MESSAGE}` = `MESSAGE_TYPE` or `"NO_MEX"` when `None`.
-- `{INDEX}` = scans the data dir for existing files with the same prefix, takes `max(existing_index) + 1` → **auto-increment per participant**, so no run ever overwrites another.
+- `{INDEX}` = scans the data dir for existing files with the same prefix, takes `max(existing_index) + 1` → **auto-increment per run**, so no run ever overwrites another.
 
 ### 7.2 Construction — `__init__`
 - Stores `is_test_build`.
@@ -317,8 +317,8 @@ At bet 40, `show_final_result` **rewires** the SPIN button:
 
 `open_message_callback` (fired when the overlay closes) → `open_survey_window()`:
 - Locks all controls (`_lock_game_window`), stops music.
-- Shows a 5 s "get ready" watermark, then `_open_survey_browser()` opens the **Qualtrics** URL in a new browser tab.
-- Rewires SPIN back to `on_spin`, and schedules `_unlock_game_window` after 35 s so the participant finishes the survey before resuming into bet 41.
+- Shows a 5 s "get ready" watermark, then `_open_survey_browser()` opens the **questionnaire** URL in a new browser tab.
+- Rewires SPIN back to `on_spin`, and schedules `_unlock_game_window` after 35 s so the user finishes the questionnaire before resuming into bet 41.
 
 ### 8.5 `closeEvent` — clean shutdown
 Logs `SESSION_END`, calls `super().closeEvent`, then `sys.exit()`. The explicit `sys.exit()` exists because **Alt+F4 only closes the window**, leaving the process (and music) alive otherwise — a real bug they hit and fixed here. (A commented "IMOTIONS forced" variant using `os._exit(0)` is preserved for environments where PyQt swallows `sys.exit`.)
@@ -330,12 +330,12 @@ Logs `SESSION_END`, calls `super().closeEvent`, then `sys.exit()`. The explicit 
 
 ## 9. The message overlay — `gui/message_window.py`
 
-`MessageWindow(QWidget)` is a **child widget of MainWindow** (not a separate OS window), sized to cover the client area (`setGeometry(0,0,parent.width(),parent.height())`) while leaving the title bar free — so the participant can still move/resize/close the main window.
+`MessageWindow(QWidget)` is a **child widget of MainWindow** (not a separate OS window), sized to cover the client area (`setGeometry(0,0,parent.width(),parent.height())`) while leaving the title bar free — so the user can still move/resize/close the main window.
 
 - Loads `mex1.png` (MEX1) or `mex2.png` (MEX2), falling back to `banana.png` if missing.
 - **MEX1:** CLOSE enabled immediately (`_timer_done = True`).
 - **MEX2:** CLOSE disabled; a 1-second `QTimer` counts down `MESSAGE_TIMER` (180 s), updating `countdown_label`; on expiry it enables CLOSE and turns it green.
-- **Programmatic close is blocked** before the timer expires (`closeEvent` calls `event.ignore()`), preventing the participant from skipping the coercive condition.
+- **Programmatic close is blocked** before the timer expires (`closeEvent` calls `event.ignore()`), preventing the overlay from being closed before the countdown ends.
 - `open_message_callback` is fired **exactly once** (guarded by `_callback_fired`) when the overlay closes.
 - Image rescales responsively (`_render_image` on `showEvent`/resize, reserving space for the bottom CLOSE+countdown bar); `MainWindow.resizeEvent` calls `_sync_to_parent` to keep the overlay aligned.
 
@@ -382,7 +382,7 @@ build script                     PyInstaller                     frozen app at r
 
 ### 12.2 `build/build_all.py` — the 6 production builds
 
-Iterates `BUILDS = [("W","MEX1"), ("W","MEX2"), ("W",None), ("L","MEX1"), ("L","MEX2"), ("L",None)]` (the three `("E",…)` entries are commented out — EQUAL was dropped from the study). For each `(condition, mex)`:
+Iterates `BUILDS = [("W","MEX1"), ("W","MEX2"), ("W",None), ("L","MEX1"), ("L","MEX2"), ("L",None)]` (the three `("E",…)` entries are commented out — EQUAL was dropped from the final set). For each `(condition, mex)`:
 1. Writes `build.env` with `BUILD_CONDITION=<c>` and `MESSAGE_TYPE=<mex>`.
 2. Computes `name = SlotMachine_{c}_{mex|NO_MEX}`.
 3. Runs PyInstaller with:
@@ -407,7 +407,7 @@ It does **not** bundle `redeem_codes.json` (the test build is stripped down). **
 
 ### 12.4 The launcher problem & `build/build_all_launchers.py`
 
-**Why launchers exist:** iMotions can only fire a stimulus by an **`.exe` path**, and after the stimulus it needs a keystroke to advance to the next survey page. A launcher wraps the game exe to provide exactly that.
+**Why launchers exist:** iMotions can only launch an item by an **`.exe` path**, and after that item exits it needs a keystroke to advance to the next page. A launcher wraps the game exe to provide exactly that.
 
 `build_all_launchers.py` holds two string templates:
 
@@ -449,7 +449,7 @@ Builds the **standalone** [imotions_launcher.py](imotions_launcher.py) (whose bo
 ⑤ python build/build_imotions_launcher.py → dist/imotions_launcher.exe
 ⑥ (Path B only) convert each .bat with a Bat-to-Exe tool
 ⑦ place each SlotMachine_X_Y.exe in the SAME folder as its launcher   (LAUNCHERS/X_Y/)
-⑧ register the launcher .exe as the iMotions stimulus
+⑧ register the launcher .exe as the iMotions item
 ```
 Repeat ①–⑤ once per language, keeping the ES/EN outputs in separate folders. Full operational detail lives in [INSTRUCTIONS.md](INSTRUCTIONS.md).
 
